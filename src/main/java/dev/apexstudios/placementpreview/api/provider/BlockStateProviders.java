@@ -56,6 +56,7 @@ import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.GrowingPlantBlock;
 import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.MossyCarpetBlock;
 import net.minecraft.world.level.block.NoteBlock;
 import net.minecraft.world.level.block.PotentSulfurBlock;
 import net.minecraft.world.level.block.PoweredRailBlock;
@@ -118,7 +119,7 @@ public interface BlockStateProviders {
     /// Requires: [PistonBaseBlock]
     BlockStateProvider PISTON_EXTENDED = property(BlockStateProperties.EXTENDED, (context, blockState, current) -> PlacementResult.success(((PistonBaseBlockAccessor) blockState.getBlock()).PlacementPreview$getNeighborSignal(context.getLevel(), context.getClickedPos(), blockState.getValue(BlockStateProperties.FACING))));
     BlockStateProvider INSIDE_WATER = PlacementValidators.INSIDE_WATER.asProvider();
-    BlockStateProvider POWERED = property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(context.getLevel().hasNeighborSignal(context.getClickedPos())));
+    BlockStateProvider POWERED = powered(BlockStateProperties.POWERED);
     BlockStateProvider POWERED_DOUBLE = POWERED.andThen(property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(current || context.getLevel().hasNeighborSignal(context.getClickedPos().above()))));
     BlockStateProvider WALL_ATTACHMENT = orElse(WallAttachmentBlockStateProvider.HORIZONTAL, HORIZONTAL_FACING.asFailure());
     BlockStateProvider WALL_ATTACHMENT_ALT = orElse(WallAttachmentBlockStateProvider.HORIZONTAL_ALT, HORIZONTAL_FACING_ALT.asFailure());
@@ -270,7 +271,7 @@ public interface BlockStateProviders {
     });
     BlockStateProvider HAS_EYE_TRUE = forced(BlockStateProperties.EYE, true);
     BlockStateProvider HAS_EYE_FALSE = forced(BlockStateProperties.EYE, false);
-    BlockStateProvider LIT = property(BlockStateProperties.LIT, (context, blockState, current) -> PlacementResult.success(context.getLevel().hasNeighborSignal(context.getClickedPos())));
+    BlockStateProvider LIT = powered(BlockStateProperties.LIT);
     BlockStateProvider LIT_TRUE = forced(BlockStateProperties.LIT, true);
     BlockStateProvider LIT_FALSE = forced(BlockStateProperties.LIT, false);
     BlockStateProvider LIT_FROM_POWERED = copyValue(BlockStateProperties.POWERED, BlockStateProperties.LIT);
@@ -365,6 +366,22 @@ public interface BlockStateProviders {
                 return PlacementResult.success(existingBlockState.setValue(property, Math.min(SegmentableBlock.MAX_SEGMENT, existingBlockState.getValue(property) + 1)));
             }
     );
+    BlockStateProvider CRACKED_TRUE = forced(BlockStateProperties.CRACKED, true);
+    BlockStateProvider CRACKED_FALSE = forced(BlockStateProperties.CRACKED, false);
+    BlockStateProvider TRIGGERED = powered(BlockStateProperties.TRIGGERED);
+    BlockStateProvider TRIGGERED_TRUE = forced(BlockStateProperties.TRIGGERED, true);
+    BlockStateProvider TRIGGERED_FALSE = forced(BlockStateProperties.TRIGGERED, false);
+    BlockStateProvider CRAFTER_ORIENTATION = property(BlockStateProperties.ORIENTATION, (context, blockState, current) -> {
+        var nearestLooking = context.getNearestLookingDirection().getOpposite();
+        return PlacementResult.success(FrontAndTop.fromFrontAndTop(
+                nearestLooking,
+                switch (nearestLooking) {
+                    case UP -> context.getHorizontalDirection();
+                    case DOWN -> context.getHorizontalDirection().getOpposite();
+                    default -> Direction.UP;
+                }
+        ));
+    });
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -429,6 +446,10 @@ public interface BlockStateProviders {
     static <TValue> TValue topOrBottom(BlockPlaceContext context, TValue top, TValue bottom) {
         var clickedFace = context.getClickedFace();
         return clickedFace != Direction.DOWN && (clickedFace == Direction.UP || !(context.getClickLocation().y() - context.getClickedPos().getY() > .5D)) ? bottom : top;
+    }
+
+    static BlockStateProvider powered(Property<Boolean> property) {
+        return property(property, (context, blockState, current) -> PlacementResult.success(context.getLevel().hasNeighborSignal(context.getClickedPos())));
     }
 
     interface Blocks {
@@ -594,6 +615,13 @@ public interface BlockStateProviders {
         BlockStateProvider LIGHTNING_ROD = CLICKED_FACE_FIXED.andThen(WATERLOGGED);
         BlockStateProvider SPELEOTHEM_BLOCK = SPELEOTHEM.andThen(WATERLOGGED);
         BlockStateProvider FLOWER_BED = HORIZONTAL_FACING_ALT.andThen(SEGMENTABLE);
+        BlockStateProvider DRIP_LEAF = WATERLOGGED.andThen(property(BlockStateProperties.HORIZONTAL_FACING, (context, blockState, current) -> {
+            var belowBlockState = context.getLevel().getBlockState(context.getClickedPos().below());
+            return PlacementResult.success(belowBlockState.is(net.minecraft.world.level.block.Blocks.BIG_DRIPLEAF) || belowBlockState.is(net.minecraft.world.level.block.Blocks.BIG_DRIPLEAF_STEM) ? belowBlockState.getValue(BlockStateProperties.HORIZONTAL_FACING) : context.getHorizontalDirection().getOpposite());
+        }));
+        BlockStateProvider DECORATED_POT = HORIZONTAL_FACING.andThen(WATERLOGGED).andThen(CRACKED_FALSE);
+        BlockStateProvider CRAFTER = CRAFTER_ORIENTATION.andThen(TRIGGERED);
+        BlockStateProvider MOSSY_CARPET = (context, blockState) -> PlacementResult.success(MossyCarpetBlock.getUpdatedState(blockState, context.getLevel(), context.getClickedPos(), true));
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(
