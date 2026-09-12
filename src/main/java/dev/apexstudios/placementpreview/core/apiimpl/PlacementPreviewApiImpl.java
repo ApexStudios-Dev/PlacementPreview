@@ -856,7 +856,7 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         event.register(Blocks.TUFF_BRICK_WALL, BlockStateProviders.Blocks.WALL);
         // event.register(Blocks.CHISELED_TUFF_BRICKS, );
         // event.register(Blocks.SULFUR, );
-        // event.register(Blocks.POTENT_SULFUR, );
+        event.register(Blocks.POTENT_SULFUR, BlockStateProviders.Blocks.POTENT_SULFUR);
         event.register(Blocks.SULFUR_SLAB, BlockStateProviders.Blocks.SLAB);
         event.register(Blocks.SULFUR_STAIRS, BlockStateProviders.Blocks.STAIR);
         event.register(Blocks.SULFUR_WALL, BlockStateProviders.Blocks.WALL);
@@ -885,12 +885,12 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         // event.register(Blocks.CALCITE, );
         // event.register(Blocks.TINTED_GLASS, );
         // event.register(Blocks.POWDER_SNOW, );
-        // event.register(Blocks.SCULK_SENSOR, );
-        // event.register(Blocks.CALIBRATED_SCULK_SENSOR, );
+        event.register(Blocks.SCULK_SENSOR, BlockStateProviders.WATERLOGGED);
+        event.register(Blocks.CALIBRATED_SCULK_SENSOR, BlockStateProviders.Blocks.CALIBRATED_SCULK_SENSOR);
         // event.register(Blocks.SCULK, );
-        // event.register(Blocks.SCULK_VEIN, );
+        event.register(Blocks.SCULK_VEIN, WallAttachmentBlockStateProvider.MULTI_FACE);
         // event.register(Blocks.SCULK_CATALYST, );
-        // event.register(Blocks.SCULK_SHRIEKER, );
+        event.register(Blocks.SCULK_SHRIEKER, BlockStateProviders.WATERLOGGED);
         // event.register(Blocks.COPPER_BLOCK, );
         // event.register(Blocks.COPPER_ORE, );
         // event.register(Blocks.DEEPSLATE_COPPER_ORE, );

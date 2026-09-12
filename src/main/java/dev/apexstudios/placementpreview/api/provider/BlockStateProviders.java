@@ -55,6 +55,7 @@ import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.GrowingPlantBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.NoteBlock;
+import net.minecraft.world.level.block.PotentSulfurBlock;
 import net.minecraft.world.level.block.PoweredRailBlock;
 import net.minecraft.world.level.block.RailState;
 import net.minecraft.world.level.block.RedStoneWireBlock;
@@ -550,6 +551,8 @@ public interface BlockStateProviders {
         BlockStateProvider CANDLE = CANDLES.andThen(WATERLOGGED);
         BlockStateProvider AMETHYST_CLUSTER = WATERLOGGED.andThen(CLICKED_FACE_FIXED);
         BlockStateProvider STAIR = HORIZONTAL_FACING.andThen(HALF).andThen(WATERLOGGED).andThen(STAIR_SHAPE);
+        BlockStateProvider POTENT_SULFUR = (context, blockState) -> PlacementResult.success(PotentSulfurBlock.validBlockState(blockState, context.getLevel(), context.getClickedPos()));
+        BlockStateProvider CALIBRATED_SCULK_SENSOR = WATERLOGGED.andThen(HORIZONTAL_FACING);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(
