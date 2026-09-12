@@ -741,8 +741,8 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         event.register(Blocks.LANTERN, BlockStateProviders.Blocks.LANTERN);
         event.register(Blocks.SOUL_LANTERN, BlockStateProviders.Blocks.LANTERN);
         event.register(Blocks.COPPER_LANTERN, BlockStateProviders.Blocks.LANTERN);
-        // event.register(Blocks.CAMPFIRE, );
-        // event.register(Blocks.SOUL_CAMPFIRE, );
+        event.register(Blocks.CAMPFIRE, BlockStateProviders.Blocks.CAMPFIRE);
+        event.register(Blocks.SOUL_CAMPFIRE, BlockStateProviders.Blocks.CAMPFIRE);
         // event.register(Blocks.SWEET_BERRY_BUSH, );
         // event.register(Blocks.WARPED_STEM, );
         // event.register(Blocks.STRIPPED_WARPED_STEM, );

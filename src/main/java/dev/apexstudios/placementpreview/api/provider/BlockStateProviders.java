@@ -7,6 +7,7 @@ import dev.apexstudios.placementpreview.api.PlacementResult;
 import dev.apexstudios.placementpreview.api.validator.PlacementValidator;
 import dev.apexstudios.placementpreview.api.validator.PlacementValidators;
 import dev.apexstudios.placementpreview.extensions.RailStateExtension;
+import dev.apexstudios.placementpreview.mixin.CampfireBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.ChestBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.CoralBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.DefaultRedstoneWireEvaluatorAccessor;
@@ -75,6 +76,8 @@ public interface BlockStateProviders {
     BlockStateProvider SNOWY = property(BlockStateProperties.SNOWY, (context, blockState, current) -> PlacementResult.success(SnowyBlock.isSnowySetting(context.getLevel().getBlockState(context.getClickedPos().above()))));
     BlockStateProvider ROTATED_PILLAR = property(BlockStateProperties.AXIS, (context, blockState, current) -> PlacementResult.success(context.getClickedFace().getAxis()));
     BlockStateProvider WATERLOGGED = property(BlockStateProperties.WATERLOGGED, (context, blockState, current) -> PlacementResult.success(context.getLevel().isWaterAt(context.getClickedPos())));
+    BlockStateProvider WATERLOGGED_FALSE = forced(BlockStateProperties.WATERLOGGED, false);
+    BlockStateProvider WATERLOGGED_TRUE = forced(BlockStateProperties.WATERLOGGED, true);
     BlockStateProvider AGE_4_MAX = forced(BlockStateProperties.AGE_4, BlockStateProperties.MAX_AGE_4);
     BlockStateProvider PERSISTENT_FALSE = forced(BlockStateProperties.PERSISTENT, false);
     BlockStateProvider PERSISTENT_TRUE = forced(BlockStateProperties.PERSISTENT, true);
@@ -259,6 +262,8 @@ public interface BlockStateProviders {
     BlockStateProvider HAS_EYE_TRUE = forced(BlockStateProperties.EYE, true);
     BlockStateProvider HAS_EYE_FALSE = forced(BlockStateProperties.EYE, false);
     BlockStateProvider LIT = property(BlockStateProperties.LIT, (context, blockState, current) -> PlacementResult.success(context.getLevel().hasNeighborSignal(context.getClickedPos())));
+    BlockStateProvider LIT_TRUE = forced(BlockStateProperties.LIT, true);
+    BlockStateProvider LIT_FALSE = forced(BlockStateProperties.LIT, false);
     BlockStateProvider FACING_HOPPER = property(BlockStateProperties.FACING_HOPPER, (context, blockState, current) -> {
         var direction = context.getClickedFace().getOpposite();
         return PlacementResult.success(direction.getAxis().isVertical() ? Direction.DOWN : direction);
@@ -290,6 +295,8 @@ public interface BlockStateProviders {
             PlacementValidators.SAME_BLOCK.negate(),
             property(BlockStateProperties.PICKLES, (context, blockState, current) -> PlacementResult.success(Math.min(SeaPickleBlock.MAX_PICKLES, context.getLevel().getBlockState(context.getClickedPos()).getValue(BlockStateProperties.PICKLES) + 1)))
     );
+    BlockStateProvider LIT_IF_NOT_WATERLOGGED = either(PlacementValidators.WATERLOGGED, LIT_FALSE, LIT_TRUE);
+    BlockStateProvider SIGNAL_FIRE = property(BlockStateProperties.SIGNAL_FIRE, (context, blockState, current) -> PlacementResult.success(((CampfireBlockAccessor) blockState.getBlock()).PlacementPreview$isSmokeSource(context.getLevel().getBlockState(context.getClickedPos().below()))));
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -497,6 +504,7 @@ public interface BlockStateProviders {
             return PlacementResult.of(result, result.canSurvive(level, pos));
         };
         BlockStateProvider LANTERN = WallAttachmentBlockStateProvider.LANTERN.andThen(WATERLOGGED);
+        BlockStateProvider CAMPFIRE = WATERLOGGED.andThen(SIGNAL_FIRE).andThen(LIT_IF_NOT_WATERLOGGED).andThen(HORIZONTAL_FACING);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(

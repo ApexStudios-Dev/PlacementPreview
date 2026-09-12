@@ -5,6 +5,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.GameMasterBlock;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.Property;
 
 public interface PlacementValidators {
     PlacementValidator SAME_BLOCK = (context, blockState) -> context.getLevel().getBlockState(context.getClickedPos()).is(blockState.getBlock());
@@ -23,6 +24,8 @@ public interface PlacementValidators {
         var existingBlockState = context.getLevel().getBlockState(context.getClickedPos().relative(clickedFace.getOpposite()));
         return !existingBlockState.is(blockState.getBlock()) || existingBlockState.getValue(BlockStateProperties.HORIZONTAL_FACING) != clickedFace;
     };
+    PlacementValidator WATERLOGGED = hasValue(BlockStateProperties.WATERLOGGED, true);
+
     PlacementValidator ITEM_ENABLED = (context, blockState) -> context.getItemInHand().isItemEnabled(context.getLevel().enabledFeatures());
     PlacementValidator BLOCK_ENABLED = (context, blockState) -> blockState.getBlock().isEnabled(context.getLevel().enabledFeatures());
     PlacementValidator IN_BOUNDS = (context, blockState) -> {
@@ -61,4 +64,13 @@ public interface PlacementValidators {
         return ((BlockItemAccessor) item).PlacementPreview$canPlace(context, blockState);
     };
     PlacementValidator PLACEABLE = ITEM_ENABLED.and(BLOCK_ENABLED).and(IN_BOUNDS).and(GAMEMASTER_ALLOWED).and(REPLACEABLE).and(CAN_PLACE_ITEM);
+
+    static PlacementValidator hasProperty(Property<?> property) {
+        return (context, blockState) -> blockState.hasProperty(property);
+    }
+
+    static <TValue extends Comparable<TValue>> PlacementValidator hasValue(Property<TValue> property, TValue value) {
+        return hasProperty(property)
+                .and((context, blockState) -> blockState.getValue(property) == value);
+    }
 }
