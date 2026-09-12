@@ -63,6 +63,7 @@ import net.minecraft.world.level.block.ScaffoldingBlock;
 import net.minecraft.world.level.block.SeaPickleBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SnowyBlock;
+import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -260,8 +261,7 @@ public interface BlockStateProviders {
             return PlacementResult.success(SlabType.DOUBLE);
         }
 
-        var clickedFace = context.getClickedFace();
-        return PlacementResult.success(clickedFace != Direction.DOWN && (clickedFace == Direction.UP || !(context.getClickLocation().y() - pos.getY() > .5D)) ? SlabType.BOTTOM : SlabType.TOP);
+        return PlacementResult.success(topOrBottom(context, SlabType.TOP, SlabType.BOTTOM));
     });
     BlockStateProvider HAS_EYE_TRUE = forced(BlockStateProperties.EYE, true);
     BlockStateProvider HAS_EYE_FALSE = forced(BlockStateProperties.EYE, false);
@@ -327,6 +327,8 @@ public interface BlockStateProviders {
     // These fix the flickering when not targeting any block
     BlockStateProvider CLICKED_FACE_FIXED = either(PlacementValidators.CLICKED_EMPTY_BLOCK, FACING_ALT, CLICKED_FACE);
     BlockStateProvider CLICKED_FACE_ALT_FIXED = either(PlacementValidators.CLICKED_EMPTY_BLOCK, FACING, CLICKED_FACE_ALT);
+    BlockStateProvider HALF = property(BlockStateProperties.HALF, (context, blockState, current) -> PlacementResult.success(topOrBottom(context, Half.TOP, Half.BOTTOM)));
+    BlockStateProvider STAIR_SHAPE = property(BlockStateProperties.STAIRS_SHAPE, (context, blockState, current) -> PlacementResult.success(StairBlock.getStairsShape(blockState, context.getLevel(), context.getClickedPos())));
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -386,6 +388,11 @@ public interface BlockStateProviders {
 
     static BlockStateProvider orElse(BlockStateProvider provider, BlockStateProvider elseProvider) {
         return (context, blockState) -> provider.apply(context, blockState).flatMapFailure(state -> elseProvider.apply(context, state));
+    }
+
+    static <TValue> TValue topOrBottom(BlockPlaceContext context, TValue top, TValue bottom) {
+        var clickedFace = context.getClickedFace();
+        return clickedFace != Direction.DOWN && (clickedFace == Direction.UP || !(context.getClickLocation().y() - context.getClickedPos().getY() > .5D)) ? bottom : top;
     }
 
     interface Blocks {
@@ -542,6 +549,7 @@ public interface BlockStateProviders {
         );
         BlockStateProvider CANDLE = CANDLES.andThen(WATERLOGGED);
         BlockStateProvider AMETHYST_CLUSTER = WATERLOGGED.andThen(CLICKED_FACE_FIXED);
+        BlockStateProvider STAIR = HORIZONTAL_FACING.andThen(HALF).andThen(WATERLOGGED).andThen(STAIR_SHAPE);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(
