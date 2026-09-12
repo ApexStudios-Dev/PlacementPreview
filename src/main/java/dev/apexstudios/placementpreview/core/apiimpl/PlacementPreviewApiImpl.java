@@ -788,7 +788,7 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         event.register(Blocks.CRIMSON_WALL_SIGN, BlockStateProviders.Blocks.WALL_SIGN);
         event.register(Blocks.WARPED_WALL_SIGN, BlockStateProviders.Blocks.WALL_SIGN);
         // event.register(Blocks.STRUCTURE_BLOCK, );
-        // event.register(Blocks.JIGSAW, );
+        event.register(Blocks.JIGSAW, BlockStateProviders.Blocks.JIGSAW);
         // event.register(Blocks.TEST_BLOCK, );
         // event.register(Blocks.TEST_INSTANCE_BLOCK, );
         // event.register(Blocks.COMPOSTER, );

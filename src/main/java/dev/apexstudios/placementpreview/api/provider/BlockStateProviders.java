@@ -26,6 +26,7 @@ import dev.apexstudios.placementpreview.mixin.ScaffoldingBlockAccessor;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 import net.minecraft.core.Direction;
+import net.minecraft.core.FrontAndTop;
 import net.minecraft.core.TypedInstance;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.BlockTags;
@@ -314,6 +315,10 @@ public interface BlockStateProviders {
 
         return BlockStateProvider.applyDefaults(context, bodyBlock);
     };
+    BlockStateProvider ORIENTATION = property(BlockStateProperties.ORIENTATION, (context, blockState, current) -> {
+        var front = context.getClickedFace();
+        return PlacementResult.success(FrontAndTop.fromFrontAndTop(front, front.getAxis().isVertical() ? context.getHorizontalDirection().getOpposite() : Direction.UP));
+    });
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -405,11 +410,7 @@ public interface BlockStateProviders {
         BlockStateProvider HOPPER = FACING_HOPPER.andThen(ENABLED_TRUE);
         BlockStateProvider COMPARATOR = HORIZONTAL_FACING_ALT.andThen(POWERED_COMPARATOR);
         BlockStateProvider REDSTONE_WIRE = REDSTONE_WIRE_CONNECTIONS.andThen(REDSTONE_WIRE_POWER);
-        BlockStateProvider SHULKER_BOX = either(
-                (context, blockState) -> context.getLevel().isEmptyBlock(context.getClickedPos().relative(context.getClickedFace().getOpposite())),
-                BlockStateProviders.FACING_ALT,
-                BlockStateProviders.CLICKED_FACE
-        );
+        BlockStateProvider SHULKER_BOX = either((context, blockState) -> context.getLevel().isEmptyBlock(context.getClickedPos().relative(context.getClickedFace().getOpposite())), FACING_ALT, CLICKED_FACE);
         BlockStateProvider CONCRETE_POWDER = transforming(
                 (context, blockState) -> {
                     var level = context.getLevel();
@@ -523,6 +524,14 @@ public interface BlockStateProviders {
         BlockStateProvider LANTERN = WallAttachmentBlockStateProvider.LANTERN.andThen(WATERLOGGED);
         BlockStateProvider CAMPFIRE = WATERLOGGED.andThen(SIGNAL_FIRE).andThen(LIT_IF_NOT_WATERLOGGED).andThen(HORIZONTAL_FACING);
         BlockStateProvider KELP = GROWING_PLANT.andThen(INSIDE_WATER);
+        BlockStateProvider JIGSAW = either(
+                (context, blockState) -> context.getLevel().isEmptyBlock(context.getClickedPos().relative(context.getClickedFace().getOpposite())),
+                property(BlockStateProperties.ORIENTATION, (context, blockState, current) -> {
+                    var front = context.getNearestLookingDirection().getOpposite();
+                    return PlacementResult.success(FrontAndTop.fromFrontAndTop(front, front.getAxis().isVertical() ? context.getHorizontalDirection().getOpposite() : Direction.UP));
+                }),
+                ORIENTATION
+        );
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(
