@@ -324,6 +324,9 @@ public interface BlockStateProviders {
             PlacementValidators.SAME_BLOCK.negate(),
             property(BlockStateProperties.CANDLES, (context, blockState, current) -> PlacementResult.success(Math.min(CandleBlock.MAX_CANDLES, context.getLevel().getBlockState(context.getClickedPos()).getValue(BlockStateProperties.CANDLES) + 1)))
     );
+    // These fix the flickering when not targeting any block
+    BlockStateProvider CLICKED_FACE_FIXED = either(PlacementValidators.CLICKED_EMPTY_BLOCK, FACING_ALT, CLICKED_FACE);
+    BlockStateProvider CLICKED_FACE_ALT_FIXED = either(PlacementValidators.CLICKED_EMPTY_BLOCK, FACING, CLICKED_FACE_ALT);
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -415,7 +418,7 @@ public interface BlockStateProviders {
         BlockStateProvider HOPPER = FACING_HOPPER.andThen(ENABLED_TRUE);
         BlockStateProvider COMPARATOR = HORIZONTAL_FACING_ALT.andThen(POWERED_COMPARATOR);
         BlockStateProvider REDSTONE_WIRE = REDSTONE_WIRE_CONNECTIONS.andThen(REDSTONE_WIRE_POWER);
-        BlockStateProvider SHULKER_BOX = either((context, blockState) -> context.getLevel().isEmptyBlock(context.getClickedPos().relative(context.getClickedFace().getOpposite())), FACING_ALT, CLICKED_FACE);
+        BlockStateProvider SHULKER_BOX = CLICKED_FACE_FIXED;
         BlockStateProvider CONCRETE_POWDER = transforming(
                 (context, blockState) -> {
                     var level = context.getLevel();
@@ -530,7 +533,7 @@ public interface BlockStateProviders {
         BlockStateProvider CAMPFIRE = WATERLOGGED.andThen(SIGNAL_FIRE).andThen(LIT_IF_NOT_WATERLOGGED).andThen(HORIZONTAL_FACING);
         BlockStateProvider KELP = GROWING_PLANT.andThen(INSIDE_WATER);
         BlockStateProvider JIGSAW = either(
-                (context, blockState) -> context.getLevel().isEmptyBlock(context.getClickedPos().relative(context.getClickedFace().getOpposite())),
+                PlacementValidators.CLICKED_EMPTY_BLOCK,
                 property(BlockStateProperties.ORIENTATION, (context, blockState, current) -> {
                     var front = context.getNearestLookingDirection().getOpposite();
                     return PlacementResult.success(FrontAndTop.fromFrontAndTop(front, front.getAxis().isVertical() ? context.getHorizontalDirection().getOpposite() : Direction.UP));
@@ -538,6 +541,7 @@ public interface BlockStateProviders {
                 ORIENTATION
         );
         BlockStateProvider CANDLE = CANDLES.andThen(WATERLOGGED);
+        BlockStateProvider AMETHYST_CLUSTER = WATERLOGGED.andThen(CLICKED_FACE_FIXED);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(

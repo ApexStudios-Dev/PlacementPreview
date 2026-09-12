@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 public interface PlacementValidators {
     PlacementValidator SAME_BLOCK = (context, blockState) -> context.getLevel().getBlockState(context.getClickedPos()).is(blockState.getBlock());
     PlacementValidator EMPTY_BLOCK = (context, blockState) -> context.getLevel().isEmptyBlock(context.getClickedPos());
+    PlacementValidator CLICKED_EMPTY_BLOCK = (context, blockState) -> context.getLevel().isEmptyBlock(context.getClickedPos().relative(context.getClickedFace().getOpposite()));
     PlacementValidator CAN_SURVIVE = (context, blockState) -> blockState.canSurvive(context.getLevel(), context.getClickedPos());
     PlacementValidator INSIDE_WATER = (context, blockState) -> {
         var fluidState = context.getLevel().getFluidState(context.getClickedPos());

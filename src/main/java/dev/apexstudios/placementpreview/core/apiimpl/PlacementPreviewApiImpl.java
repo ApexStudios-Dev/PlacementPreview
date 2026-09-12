@@ -837,10 +837,10 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         // event.register(Blocks.DYED_CANDLE_CAKE, );
         // event.register(Blocks.AMETHYST_BLOCK, );
         // event.register(Blocks.BUDDING_AMETHYST, );
-        // event.register(Blocks.AMETHYST_CLUSTER, );
-        // event.register(Blocks.LARGE_AMETHYST_BUD, );
-        // event.register(Blocks.MEDIUM_AMETHYST_BUD, );
-        // event.register(Blocks.SMALL_AMETHYST_BUD, );
+        event.register(Blocks.AMETHYST_CLUSTER, BlockStateProviders.Blocks.AMETHYST_CLUSTER);
+        event.register(Blocks.LARGE_AMETHYST_BUD, BlockStateProviders.Blocks.AMETHYST_CLUSTER);
+        event.register(Blocks.MEDIUM_AMETHYST_BUD, BlockStateProviders.Blocks.AMETHYST_CLUSTER);
+        event.register(Blocks.SMALL_AMETHYST_BUD, BlockStateProviders.Blocks.AMETHYST_CLUSTER);
         // event.register(Blocks.TUFF, );
         event.register(Blocks.TUFF_SLAB, BlockStateProviders.Blocks.SLAB);
         // event.register(Blocks.TUFF_STAIRS, );
