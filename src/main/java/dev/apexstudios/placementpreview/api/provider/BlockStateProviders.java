@@ -64,6 +64,7 @@ import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.RedstoneTorchBlock;
 import net.minecraft.world.level.block.ScaffoldingBlock;
 import net.minecraft.world.level.block.SeaPickleBlock;
+import net.minecraft.world.level.block.SegmentableBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SnowyBlock;
 import net.minecraft.world.level.block.SpeleothemBlock;
@@ -355,6 +356,15 @@ public interface BlockStateProviders {
                 .setValue(BlockStateProperties.SPELEOTHEM_THICKNESS, thickness)
         );
     };
+    /// Requires: [SegmentableBlock]
+    BlockStateProvider SEGMENTABLE = transforming(
+            PlacementValidators.SAME_BLOCK.negate(),
+            (context, blockState) -> {
+                var existingBlockState = context.getLevel().getBlockState(context.getClickedPos());
+                var property = ((SegmentableBlock) blockState.getBlock()).getSegmentAmountProperty();
+                return PlacementResult.success(existingBlockState.setValue(property, Math.min(SegmentableBlock.MAX_SEGMENT, existingBlockState.getValue(property) + 1)));
+            }
+    );
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -583,6 +593,7 @@ public interface BlockStateProviders {
         BlockStateProvider COPPER_GOLEM = HORIZONTAL_FACING_ALT.andThen(WATERLOGGED);
         BlockStateProvider LIGHTNING_ROD = CLICKED_FACE_FIXED.andThen(WATERLOGGED);
         BlockStateProvider SPELEOTHEM_BLOCK = SPELEOTHEM.andThen(WATERLOGGED);
+        BlockStateProvider FLOWER_BED = HORIZONTAL_FACING_ALT.andThen(SEGMENTABLE);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(

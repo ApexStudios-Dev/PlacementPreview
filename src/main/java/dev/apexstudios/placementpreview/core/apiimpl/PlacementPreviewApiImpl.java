@@ -914,9 +914,9 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         // event.register(Blocks.AZALEA, );
         // event.register(Blocks.FLOWERING_AZALEA, );
         // event.register(Blocks.MOSS_CARPET, );
-        // event.register(Blocks.PINK_PETALS, );
-        // event.register(Blocks.WILDFLOWERS, );
-        // event.register(Blocks.LEAF_LITTER, );
+        event.register(Blocks.PINK_PETALS, BlockStateProviders.Blocks.FLOWER_BED);
+        event.register(Blocks.WILDFLOWERS, BlockStateProviders.Blocks.FLOWER_BED);
+        event.register(Blocks.LEAF_LITTER, BlockStateProviders.Blocks.FLOWER_BED);
         // event.register(Blocks.MOSS_BLOCK, );
         // event.register(Blocks.BIG_DRIPLEAF, );
         // event.register(Blocks.BIG_DRIPLEAF_STEM, );
