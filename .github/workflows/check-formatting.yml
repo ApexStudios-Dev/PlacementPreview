@@ -1,0 +1,21 @@
+name: Check Formatting
+
+on:
+  pull_request:
+    types:
+      - synchronize
+      - opened
+
+permissions:
+  contents: read
+
+jobs:
+  check-formatting:
+    name: Check Formatting
+    uses: ApexStudios-Dev/.github/.github/workflows/_check-formatting.yml@master
+    secrets: inherit
+    with:
+      java-version: 25
+      java-vendor: temurin
+      use-self-runner: false
+      unmark-gradlew-exec: false
