@@ -40,8 +40,18 @@ public final class PlacementPreviewMod {
                 return;
             }
 
-            if(!client.debugEntries.isCurrentlyEnabled(alwaysVisible) && hitResult.getType() == HitResult.Type.MISS) {
-                return;
+            if(hitResult.getType() == HitResult.Type.MISS) {
+                if(!client.debugEntries.isCurrentlyEnabled(alwaysVisible)) {
+                    return;
+                }
+
+                // vanillas hit result flickers between top and bottom of air blocks
+                // as you move your view around, this simple hack "fixes" that
+                // simply replace the direction with what ever is closest to the players view
+                // if we are looking up or down
+                if(hitResult.getDirection().getAxis().isVertical()) {
+                    hitResult = hitResult.withDirection(player.getNearestViewDirection());
+                }
             }
 
             // TODO: REMOVE ME BEFORE PUBLISHING!!!!!!!!!!!!!!!1
