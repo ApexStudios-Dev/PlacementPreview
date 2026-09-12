@@ -789,12 +789,17 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         event.register(Blocks.WARPED_WALL_SIGN, BlockStateProviders.Blocks.WALL_SIGN);
         // event.register(Blocks.STRUCTURE_BLOCK, );
         event.register(Blocks.JIGSAW, BlockStateProviders.Blocks.JIGSAW);
+        // vanilla loads the `MODE` directly from the `BLOCK_STATE` component
+        // but that is not necessery at all, it is done for us
+        // when by applying the whole component to the placed block state
+        // this also happens in vanillas placement logic, so i dont understand why they do this... mojang.. why??
+        // BlockItem.updateBlockStateFromTag() handles this for you
         // event.register(Blocks.TEST_BLOCK, );
         // event.register(Blocks.TEST_INSTANCE_BLOCK, );
         // event.register(Blocks.COMPOSTER, );
         // event.register(Blocks.TARGET, );
-        // event.register(Blocks.BEE_NEST, );
-        // event.register(Blocks.BEEHIVE, );
+        event.register(Blocks.BEE_NEST, BlockStateProviders.HORIZONTAL_FACING_ALT);
+        event.register(Blocks.BEEHIVE, BlockStateProviders.HORIZONTAL_FACING_ALT);
         // event.register(Blocks.HONEY_BLOCK, );
         // event.register(Blocks.HONEYCOMB_BLOCK, );
         // event.register(Blocks.NETHERITE_BLOCK, );
@@ -826,8 +831,8 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         // event.register(Blocks.CHISELED_NETHER_BRICKS, );
         // event.register(Blocks.CRACKED_NETHER_BRICKS, );
         // event.register(Blocks.QUARTZ_BRICKS, );
-        // event.register(Blocks.CANDLE, );
-        // event.register(Blocks.DYED_CANDLE, );
+        event.register(Blocks.CANDLE, BlockStateProviders.Blocks.CANDLE);
+        event.register(Blocks.DYED_CANDLE, BlockStateProviders.Blocks.CANDLE);
         // event.register(Blocks.CANDLE_CAKE, );
         // event.register(Blocks.DYED_CANDLE_CAKE, );
         // event.register(Blocks.AMETHYST_BLOCK, );

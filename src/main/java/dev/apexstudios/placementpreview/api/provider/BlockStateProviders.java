@@ -38,6 +38,7 @@ import net.minecraft.world.level.block.BambooStalkBlock;
 import net.minecraft.world.level.block.BaseCoralFanBlock;
 import net.minecraft.world.level.block.BaseRailBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.ChorusPlantBlock;
 import net.minecraft.world.level.block.ConcretePowderBlock;
@@ -319,6 +320,10 @@ public interface BlockStateProviders {
         var front = context.getClickedFace();
         return PlacementResult.success(FrontAndTop.fromFrontAndTop(front, front.getAxis().isVertical() ? context.getHorizontalDirection().getOpposite() : Direction.UP));
     });
+    BlockStateProvider CANDLES = transforming(
+            PlacementValidators.SAME_BLOCK.negate(),
+            property(BlockStateProperties.CANDLES, (context, blockState, current) -> PlacementResult.success(Math.min(CandleBlock.MAX_CANDLES, context.getLevel().getBlockState(context.getClickedPos()).getValue(BlockStateProperties.CANDLES) + 1)))
+    );
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -532,6 +537,7 @@ public interface BlockStateProviders {
                 }),
                 ORIENTATION
         );
+        BlockStateProvider CANDLE = CANDLES.andThen(WATERLOGGED);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(
