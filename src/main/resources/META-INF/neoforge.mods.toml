@@ -1,5 +1,5 @@
 license = "AllRightsReserved"
-issueTrackerURL = "https://github.com/ApexStudios-Dev/Issues/issues"
+issueTrackerURL = "https://github.com/ApexStudios-Dev/PlacementPreview/issues"
 
 [[mods]]
 modId = "placementpreview"
@@ -10,7 +10,7 @@ authors = "Apex"
 description = "PlacementPreview is a mod for Minecraft (NeoForge) which attempts to visualize the placement of the item the player is currently holding."
 #bannerFile = "banner.png"
 #iconFile = "icon.png"
-#displayURL = "https://modrinth.com/mod/ghost-renderer"
+#displayURL = "https://modrinth.com/mod/placement-preview"
 
 [[dependencies.placementpreview]]
 modId = "minecraft"
