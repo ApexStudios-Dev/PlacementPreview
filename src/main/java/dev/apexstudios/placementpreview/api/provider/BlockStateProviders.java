@@ -42,6 +42,7 @@ import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.ChorusPlantBlock;
 import net.minecraft.world.level.block.ConcretePowderBlock;
+import net.minecraft.world.level.block.CopperChestBlock;
 import net.minecraft.world.level.block.CoralBlock;
 import net.minecraft.world.level.block.CoralFanBlock;
 import net.minecraft.world.level.block.CoralPlantBlock;
@@ -269,6 +270,7 @@ public interface BlockStateProviders {
     BlockStateProvider LIT = property(BlockStateProperties.LIT, (context, blockState, current) -> PlacementResult.success(context.getLevel().hasNeighborSignal(context.getClickedPos())));
     BlockStateProvider LIT_TRUE = forced(BlockStateProperties.LIT, true);
     BlockStateProvider LIT_FALSE = forced(BlockStateProperties.LIT, false);
+    BlockStateProvider LIT_FROM_POWERED = copyValue(BlockStateProperties.POWERED, BlockStateProperties.LIT);
     BlockStateProvider FACING_HOPPER = property(BlockStateProperties.FACING_HOPPER, (context, blockState, current) -> {
         var direction = context.getClickedFace().getOpposite();
         return PlacementResult.success(direction.getAxis().isVertical() ? Direction.DOWN : direction);
@@ -330,6 +332,7 @@ public interface BlockStateProviders {
     BlockStateProvider CLICKED_FACE_ALT_FIXED = either(PlacementValidators.CLICKED_EMPTY_BLOCK, FACING, CLICKED_FACE_ALT);
     BlockStateProvider HALF = property(BlockStateProperties.HALF, (context, blockState, current) -> PlacementResult.success(topOrBottom(context, Half.TOP, Half.BOTTOM)));
     BlockStateProvider STAIR_SHAPE = property(BlockStateProperties.STAIRS_SHAPE, (context, blockState, current) -> PlacementResult.success(StairBlock.getStairsShape(blockState, context.getLevel(), context.getClickedPos())));
+    BlockStateProvider LEAST_OXIDIZED_COPPER_CHEST = (context, blockState) -> PlacementResult.success(CopperChestBlock.getLeastOxidizedChestOfConnectedBlocks(blockState, context.getLevel(), context.getClickedPos()));
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -553,6 +556,10 @@ public interface BlockStateProviders {
         BlockStateProvider STAIR = HORIZONTAL_FACING.andThen(HALF).andThen(WATERLOGGED).andThen(STAIR_SHAPE);
         BlockStateProvider POTENT_SULFUR = (context, blockState) -> PlacementResult.success(PotentSulfurBlock.validBlockState(blockState, context.getLevel(), context.getClickedPos()));
         BlockStateProvider CALIBRATED_SCULK_SENSOR = WATERLOGGED.andThen(HORIZONTAL_FACING);
+        BlockStateProvider COPPER_BULB = POWERED.andThen(LIT_FROM_POWERED);
+        BlockStateProvider COPPER_CHEST = CHEST.andThen(LEAST_OXIDIZED_COPPER_CHEST);
+        BlockStateProvider COPPER_GOLEM = HORIZONTAL_FACING_ALT.andThen(WATERLOGGED);
+        BlockStateProvider LIGHTNING_ROD = CLICKED_FACE_FIXED.andThen(WATERLOGGED);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(

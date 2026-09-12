@@ -900,11 +900,11 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         event.register(Blocks.CUT_COPPER_SLAB, BlockStateProviders.Blocks.SLAB);
         event.register(Blocks.COPPER_DOOR, BlockStateProviders.Blocks.DOOR);
         event.register(Blocks.COPPER_TRAPDOOR, BlockStateProviders.Blocks.TRAPDOOR);
-        // event.register(Blocks.COPPER_GRATE, );
-        // event.register(Blocks.COPPER_BULB, );
-        // event.register(Blocks.COPPER_CHEST, );
-        // event.register(Blocks.COPPER_GOLEM_STATUE, );
-        // event.register(Blocks.LIGHTNING_ROD, );
+        event.register(Blocks.COPPER_GRATE, BlockStateProviders.WATERLOGGED);
+        event.register(Blocks.COPPER_BULB, BlockStateProviders.Blocks.COPPER_BULB);
+        event.register(Blocks.COPPER_CHEST, BlockStateProviders.Blocks.COPPER_CHEST);
+        event.register(Blocks.COPPER_GOLEM_STATUE, BlockStateProviders.Blocks.COPPER_GOLEM);
+        event.register(Blocks.LIGHTNING_ROD, BlockStateProviders.Blocks.LIGHTNING_ROD);
         // event.register(Blocks.DRIPSTONE_BLOCK, );
         // event.register(Blocks.POINTED_DRIPSTONE, );
         // event.register(Blocks.SULFUR_SPIKE, );
