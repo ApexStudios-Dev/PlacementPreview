@@ -16,6 +16,7 @@ import dev.apexstudios.placementpreview.mixin.DiodeBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.DoorBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.FenceGateBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.FireBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.GrowingPlantBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.NoteBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.PistonBaseBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.PoweredRailBlockAccessor;
@@ -49,6 +50,7 @@ import net.minecraft.world.level.block.DiodeBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.FireBlock;
+import net.minecraft.world.level.block.GrowingPlantBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.NoteBlock;
 import net.minecraft.world.level.block.PoweredRailBlock;
@@ -297,6 +299,21 @@ public interface BlockStateProviders {
     );
     BlockStateProvider LIT_IF_NOT_WATERLOGGED = either(PlacementValidators.WATERLOGGED, LIT_FALSE, LIT_TRUE);
     BlockStateProvider SIGNAL_FIRE = property(BlockStateProperties.SIGNAL_FIRE, (context, blockState, current) -> PlacementResult.success(((CampfireBlockAccessor) blockState.getBlock()).PlacementPreview$isSmokeSource(context.getLevel().getBlockState(context.getClickedPos().below()))));
+    /// Requires: [GrowingPlantBlock]
+    BlockStateProvider GROWING_PLANT = (context, blockState) -> {
+        var level = context.getLevel();
+        var block = (GrowingPlantBlock) blockState.getBlock();
+        var accessor = (GrowingPlantBlockAccessor) block;
+        var headBlock = accessor.PlacementPreview$getHeadBlock();
+        var bodyBlock = accessor.PlacementPreview$getBodyBlock();
+        var growingDirectionBlockState = level.getBlockState(context.getClickedPos().relative(block.growthDirection));
+
+        if(!growingDirectionBlockState.is(headBlock) && !growingDirectionBlockState.is(bodyBlock)) {
+            return PlacementResult.success(block.getStateForPlacement(level.getRandom()));
+        }
+
+        return BlockStateProvider.applyDefaults(context, bodyBlock);
+    };
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -505,6 +522,7 @@ public interface BlockStateProviders {
         };
         BlockStateProvider LANTERN = WallAttachmentBlockStateProvider.LANTERN.andThen(WATERLOGGED);
         BlockStateProvider CAMPFIRE = WATERLOGGED.andThen(SIGNAL_FIRE).andThen(LIT_IF_NOT_WATERLOGGED).andThen(HORIZONTAL_FACING);
+        BlockStateProvider KELP = GROWING_PLANT.andThen(INSIDE_WATER);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(

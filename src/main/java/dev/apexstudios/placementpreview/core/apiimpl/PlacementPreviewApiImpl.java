@@ -631,8 +631,8 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         event.register(Blocks.GLAZED_TERRACOTTA, BlockStateProviders.HORIZONTAL_FACING_ALT);
         // event.register(Blocks.CONCRETE, );
         event.register(Blocks.CONCRETE_POWDER, BlockStateProviders.Blocks.CONCRETE_POWDER);
-        event.register(Blocks.KELP, BlockStateProviders.INSIDE_WATER);
-        // event.register(Blocks.KELP_PLANT, );
+        event.register(Blocks.KELP, BlockStateProviders.Blocks.KELP);
+        event.register(Blocks.KELP_PLANT, BlockStateProviders.GROWING_PLANT);
         // event.register(Blocks.DRIED_KELP_BLOCK, );
         event.register(Blocks.TURTLE_EGG, BlockStateProviders.EGGS);
         // event.register(Blocks.SNIFFER_EGG, );
@@ -760,10 +760,10 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         // event.register(Blocks.CRIMSON_NYLIUM, );
         // event.register(Blocks.CRIMSON_FUNGUS, );
         // event.register(Blocks.SHROOMLIGHT, );
-        // event.register(Blocks.WEEPING_VINES, );
-        // event.register(Blocks.WEEPING_VINES_PLANT, );
-        // event.register(Blocks.TWISTING_VINES, );
-        // event.register(Blocks.TWISTING_VINES_PLANT, );
+        event.register(Blocks.WEEPING_VINES, BlockStateProviders.GROWING_PLANT);
+        event.register(Blocks.WEEPING_VINES_PLANT, BlockStateProviders.GROWING_PLANT);
+        event.register(Blocks.TWISTING_VINES, BlockStateProviders.GROWING_PLANT);
+        event.register(Blocks.TWISTING_VINES_PLANT, BlockStateProviders.GROWING_PLANT);
         // event.register(Blocks.CRIMSON_ROOTS, );
         // event.register(Blocks.CRIMSON_PLANKS, );
         // event.register(Blocks.WARPED_PLANKS, );
@@ -903,8 +903,8 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         // event.register(Blocks.DRIPSTONE_BLOCK, );
         // event.register(Blocks.POINTED_DRIPSTONE, );
         // event.register(Blocks.SULFUR_SPIKE, );
-        // event.register(Blocks.CAVE_VINES, );
-        // event.register(Blocks.CAVE_VINES_PLANT, );
+        event.register(Blocks.CAVE_VINES, BlockStateProviders.GROWING_PLANT);
+        event.register(Blocks.CAVE_VINES_PLANT, BlockStateProviders.GROWING_PLANT);
         // event.register(Blocks.SPORE_BLOSSOM, );
         // event.register(Blocks.AZALEA, );
         // event.register(Blocks.FLOWERING_AZALEA, );
