@@ -1,0 +1,579 @@
+package dev.apexstudios.placementpreview.api.provider;
+
+import com.google.common.base.Predicates;
+import dev.apexstudios.placementpreview.api.BlockStateHelper;
+import dev.apexstudios.placementpreview.api.PlacementPreview;
+import dev.apexstudios.placementpreview.api.PlacementResult;
+import dev.apexstudios.placementpreview.api.validator.PlacementValidator;
+import dev.apexstudios.placementpreview.api.validator.PlacementValidators;
+import dev.apexstudios.placementpreview.extensions.RailStateExtension;
+import dev.apexstudios.placementpreview.mixin.ChestBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.CoralBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.DefaultRedstoneWireEvaluatorAccessor;
+import dev.apexstudios.placementpreview.mixin.DetectorRailBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.DiodeBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.DoorBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.FenceGateBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.FireBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.NoteBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.PistonBaseBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.PoweredRailBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.RedStoneTorchBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.RedStoneWireBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.ScaffoldingBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.VineBlockAccessor;
+import java.util.function.BiFunction;
+import java.util.function.UnaryOperator;
+import net.minecraft.core.Direction;
+import net.minecraft.core.TypedInstance;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.BambooStalkBlock;
+import net.minecraft.world.level.block.BaseCoralFanBlock;
+import net.minecraft.world.level.block.BaseRailBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.ChorusPlantBlock;
+import net.minecraft.world.level.block.ConcretePowderBlock;
+import net.minecraft.world.level.block.CoralBlock;
+import net.minecraft.world.level.block.CoralFanBlock;
+import net.minecraft.world.level.block.CoralPlantBlock;
+import net.minecraft.world.level.block.CoralWallFanBlock;
+import net.minecraft.world.level.block.CreakingHeartBlock;
+import net.minecraft.world.level.block.DetectorRailBlock;
+import net.minecraft.world.level.block.DiodeBlock;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.FireBlock;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.MultifaceBlock;
+import net.minecraft.world.level.block.NoteBlock;
+import net.minecraft.world.level.block.PoweredRailBlock;
+import net.minecraft.world.level.block.RailState;
+import net.minecraft.world.level.block.RedStoneWireBlock;
+import net.minecraft.world.level.block.RedstoneTorchBlock;
+import net.minecraft.world.level.block.ScaffoldingBlock;
+import net.minecraft.world.level.block.SeaPickleBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.SnowyBlock;
+import net.minecraft.world.level.block.TurtleEggBlock;
+import net.minecraft.world.level.block.VineBlock;
+import net.minecraft.world.level.block.WallHangingSignBlock;
+import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.AttachFace;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.ChestType;
+import net.minecraft.world.level.block.state.properties.Half;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.block.state.properties.RailShape;
+import net.minecraft.world.level.block.state.properties.RotationSegment;
+import net.minecraft.world.level.block.state.properties.SlabType;
+
+@SuppressWarnings({"resource", "DataFlowIssue", "deprecation"})
+public interface BlockStateProviders {
+    BlockStateProvider SNOWY = property(BlockStateProperties.SNOWY, (context, blockState, current) -> PlacementResult.success(SnowyBlock.isSnowySetting(context.getLevel().getBlockState(context.getClickedPos().above()))));
+    BlockStateProvider ROTATED_PILLAR = property(BlockStateProperties.AXIS, (context, blockState, current) -> PlacementResult.success(context.getClickedFace().getAxis()));
+    BlockStateProvider WATERLOGGED = property(BlockStateProperties.WATERLOGGED, (context, blockState, current) -> PlacementResult.success(context.getLevel().isWaterAt(context.getClickedPos())));
+    BlockStateProvider AGE_4_MAX = forced(BlockStateProperties.AGE_4, BlockStateProperties.MAX_AGE_4);
+    BlockStateProvider PERSISTENT_FALSE = forced(BlockStateProperties.PERSISTENT, false);
+    BlockStateProvider PERSISTENT_TRUE = forced(BlockStateProperties.PERSISTENT, true);
+    BlockStateProvider LEAVES_DISTANCE = (context, blockState) -> PlacementResult.success(LeavesBlock.updateDistance(blockState, context.getLevel(), context.getClickedPos()));
+    BlockStateProvider CLICKED_FACE = property(BlockStateProperties.FACING, (context, blockState, current) -> PlacementResult.success(context.getClickedFace()));
+    BlockStateProvider CLICKED_FACE_ALT = CLICKED_FACE.andThen(property(BlockStateProperties.FACING, (context, blockState, current) -> PlacementResult.success(current.getOpposite())));
+    BlockStateProvider FACING = property(BlockStateProperties.FACING, (context, blockState, current) -> PlacementResult.success(context.getNearestLookingDirection()));
+    BlockStateProvider FACING_ALT = FACING.andThen(property(BlockStateProperties.FACING, (context, blockState, current) -> PlacementResult.success(current.getOpposite())));
+    /// Requires: [NoteBlock]
+    BlockStateProvider NOTE_BLOCK_INTRUMENT = (context, blockState) -> PlacementResult.success(((NoteBlockAccessor) blockState.getBlock()).PlacementPreview$setInstrument(context.getLevel(), context.getClickedPos(), blockState));
+    BlockStateProvider HORIZONTAL_FACING = property(BlockStateProperties.HORIZONTAL_FACING, (context, blockState, current) -> PlacementResult.success(context.getHorizontalDirection()));
+    BlockStateProvider HORIZONTAL_FACING_ALT = HORIZONTAL_FACING.andThen(property(BlockStateProperties.HORIZONTAL_FACING, (context, blockState, current) -> PlacementResult.success(current.getOpposite())));
+    BlockStateProvider HORIZONTAL_FACING_CLOCKWISE = HORIZONTAL_FACING.andThen(property(BlockStateProperties.HORIZONTAL_FACING, (context, blockState, current) -> PlacementResult.success(current.getClockWise())));
+    /// Requires: [BaseRailBlock]
+    BlockStateProvider RAIL_SHAPE = (context, blockState) -> {
+        var direction = context.getHorizontalDirection();
+        return PlacementResult.success(blockState.setValue(((BaseRailBlock) blockState.getBlock()).getShapeProperty(), direction == Direction.EAST || direction == Direction.WEST ? RailShape.EAST_WEST : RailShape.NORTH_SOUTH));
+    };
+    /// Requires: [BaseRailBlock]
+    BlockStateProvider RAIL_STATE = (context, blockState) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var currentShape = ((BaseRailBlock) blockState.getBlock()).getRailDirection(blockState, level, pos, null);
+        var state = new RailState(level, pos, blockState);
+        ((RailStateExtension) state).PlacementPreview$allowsSetBlock(false);
+        return PlacementResult.success(state.place(level.hasNeighborSignal(pos), true, currentShape).getState());
+    };
+    /// Requires: [PistonBaseBlock]
+    BlockStateProvider PISTON_EXTENDED = property(BlockStateProperties.EXTENDED, (context, blockState, current) -> PlacementResult.success(((PistonBaseBlockAccessor) blockState.getBlock()).PlacementPreview$getNeighborSignal(context.getLevel(), context.getClickedPos(), blockState.getValue(BlockStateProperties.FACING))));
+    BlockStateProvider INSIDE_WATER = PlacementValidators.INSIDE_WATER.asProvider();
+    BlockStateProvider POWERED = property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(context.getLevel().hasNeighborSignal(context.getClickedPos())));
+    BlockStateProvider POWERED_DOUBLE = POWERED.andThen(property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(current || context.getLevel().hasNeighborSignal(context.getClickedPos().above()))));
+    BlockStateProvider WALL_ATTACHMENT = (context, blockState) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+
+        for(var direction : context.getNearestLookingDirections()) {
+            if(!direction.getAxis().isHorizontal()) {
+                continue;
+            }
+
+            var attachmentBlockState = blockState.setValue(BlockStateProperties.HORIZONTAL_FACING, direction);
+
+            if(attachmentBlockState.canSurvive(level, pos)) {
+                return PlacementResult.success(attachmentBlockState);
+            }
+        }
+
+        return HORIZONTAL_FACING.apply(context, blockState).fail();
+    };
+    BlockStateProvider WALL_ATTACHMENT_ALT = (context, blockState) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+
+        for(var direction : context.getNearestLookingDirections()) {
+            if(!direction.getAxis().isHorizontal()) {
+                continue;
+            }
+
+            var attachmentBlockState = blockState.setValue(BlockStateProperties.HORIZONTAL_FACING, direction.getOpposite());
+
+            if(attachmentBlockState.canSurvive(level, pos)) {
+                return PlacementResult.success(attachmentBlockState);
+            }
+        }
+
+        return HORIZONTAL_FACING_ALT.apply(context, blockState).fail();
+    };
+    /// Requires: [FireBlock]
+    BlockStateProvider FIRE_BLOCK = (context, blockState) -> PlacementResult.success(((FireBlockAccessor) blockState.getBlock()).PlacementPreview$getStateForPlacement(context.getLevel(), context.getClickedPos()));
+    BlockStateProvider CREAKING_HEART_TYPE = (context, blockState) -> PlacementResult.success(CreakingHeartBlock.updateState(blockState, context.getLevel(), context.getClickedPos()));
+    /// Requires: [ChestBlock]
+    BlockStateProvider CHEST_TYPE = (context, blockState) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var direction = context.getHorizontalDirection().getOpposite();
+        var secondaryUse = context.isSecondaryUseActive();
+        var clickedFace = context.getClickedFace();
+        var clickedFaceAxis = clickedFace.getAxis();
+        var chest = (ChestBlockAccessor) blockState.getBlock();
+        var type = ChestType.SINGLE;
+
+        if(clickedFaceAxis.isHorizontal() && secondaryUse) {
+            var clickedFaceOpposite = clickedFace.getOpposite();
+            var neighbourFacing = chest.PlacementPreview$candidatePartnerFacing(level, pos, clickedFaceOpposite);
+
+            if(neighbourFacing != null && neighbourFacing.getAxis() != clickedFaceAxis) {
+                direction = neighbourFacing;
+                type = direction.getCounterClockWise() == clickedFaceOpposite ? ChestType.RIGHT : ChestType.LEFT;
+            }
+        }
+
+        if(type == ChestType.SINGLE && !secondaryUse) {
+            type = chest.PlacementPreview$getChestType(level, pos, direction);
+        }
+
+        return PlacementResult.success(blockState
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, direction)
+                .setValue(BlockStateProperties.CHEST_TYPE, type)
+        );
+    };
+    /// Requires: [RedStoneWireBlock]
+    BlockStateProvider REDSTONE_WIRE_CONNECTIONS = (context, blockState) -> PlacementResult.success(((RedStoneWireBlockAccessor) blockState.getBlock()).PlacementPreview$getConnectionState(context.getLevel(), blockState, context.getClickedPos()));
+    BlockStateProvider INVALID_TO_DIRT = transforming(PlacementValidators.CAN_SURVIVE, itemTransformer(Items.DIRT));
+    BlockStateProvider ROTATION = property(BlockStateProperties.ROTATION_16, (context, blockState, current) -> PlacementResult.success(RotationSegment.convertToSegment(context.getRotation())));
+    BlockStateProvider ROTATION_ALT = property(BlockStateProperties.ROTATION_16, (context, blockState, current) -> PlacementResult.success(RotationSegment.convertToSegment(context.getRotation() + 180F)));
+    /// Requires: [DoorBlock]
+    BlockStateProvider DOOR_HINGE = property(BlockStateProperties.DOOR_HINGE, (context, blockState, current) -> PlacementResult.success(((DoorBlockAccessor) blockState.getBlock()).PlacementPreview$getHinge(context)));
+    BlockStateProvider LADDER_VALIDTION = PlacementValidators.LADDER.asProvider();
+    BlockStateProvider HANGING_SIGN_ATTACHMENT = (context, blockState) -> {
+        var level = context.getLevel();
+        var abovePos = context.getClickedPos().above();
+        var aboveBlockState = level.getBlockState(abovePos);
+        var secondaryUse = context.isSecondaryUseActive();
+        var attachedToMiddle = !Block.isFaceFull(aboveBlockState.getCollisionShape(level, abovePos), Direction.DOWN) || secondaryUse;
+
+        if(aboveBlockState.is(BlockTags.ALL_HANGING_SIGNS) && !secondaryUse) {
+            var direction = Direction.fromYRot(context.getRotation());
+
+            if(aboveBlockState.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) {
+                var aboveDirection = aboveBlockState.getValue(BlockStateProperties.HORIZONTAL_FACING);
+
+                if(aboveDirection.getAxis().test(direction)) {
+                    attachedToMiddle = false;
+                }
+            } else if(aboveBlockState.hasProperty(BlockStateProperties.ROTATION_16)) {
+                var aboveDirection = RotationSegment.convertToDirection(aboveBlockState.getValue(BlockStateProperties.ROTATION_16));
+
+                if(aboveDirection.isPresent() && aboveDirection.get().getAxis().test(direction)) {
+                    attachedToMiddle = false;
+                }
+            }
+        }
+
+        return PlacementResult.success(blockState
+                .setValue(BlockStateProperties.ATTACHED, attachedToMiddle)
+                .setValue(BlockStateProperties.ROTATION_16, attachedToMiddle ? RotationSegment.convertToSegment(context.getRotation() + 180F) : RotationSegment.convertToSegment(context.getRotation()))
+        );
+    };
+    /// Requires: [WallHangingSignBlock]
+    BlockStateProvider WALL_HANGING_SIGN_ATTACHMENT = (context, blockState) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var clickedFace = context.getClickedFace();
+
+        for(var direction : context.getNearestLookingDirections()) {
+            var axis = direction.getAxis();
+
+            if(!axis.isHorizontal() || axis.test(clickedFace)) {
+                continue;
+            }
+
+            var attachmentBlockState = blockState.setValue(BlockStateProperties.HORIZONTAL_FACING, direction.getOpposite());
+
+            if(attachmentBlockState.canSurvive(level, pos) && ((WallHangingSignBlock) attachmentBlockState.getBlock()).canPlace(attachmentBlockState, level, pos)) {
+                return PlacementResult.success(attachmentBlockState);
+            }
+        }
+
+        return PlacementResult.failure(blockState);
+    };
+    BlockStateProvider FACING_ATTACHED_HORIZONTAL = (context, blockState) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+
+        for(var direction : context.getNearestLookingDirections()) {
+            var attached = AttachFace.WALL;
+            var facingDirection = direction.getOpposite();
+
+            if(direction.getAxis().isVertical()) {
+                attached = direction == Direction.UP ? AttachFace.CEILING : AttachFace.FLOOR;
+                facingDirection = context.getHorizontalDirection();
+            }
+
+            var attachmentBlockState = blockState
+                    .setValue(BlockStateProperties.ATTACH_FACE, attached)
+                    .setValue(BlockStateProperties.HORIZONTAL_FACING, facingDirection);
+
+            if(attachmentBlockState.canSurvive(level, pos)) {
+                return PlacementResult.success(attachmentBlockState);
+            }
+        }
+
+        return PlacementResult.failure(blockState);
+    };
+    /// Requires: [RedstoneTorchBlock]
+    BlockStateProvider REDSTONE_TORCH_LIT = property(BlockStateProperties.LIT, (context, blockState, current) -> PlacementResult.success(!((RedStoneTorchBlockAccessor) blockState.getBlock()).PlacementPreview$hasNeighborSignal(context.getLevel(), context.getClickedPos(), blockState)));
+    BlockStateProvider SNOW_LAYERS = property(BlockStateProperties.LAYERS, (context, blockState, current) -> {
+        var existingBlockState = context.getLevel().getBlockState(context.getClickedPos());
+
+        if(!existingBlockState.is(blockState.getBlock())) {
+            return PlacementResult.success(current);
+        }
+
+        return PlacementResult.success(Math.min(SnowLayerBlock.MAX_HEIGHT, existingBlockState.getValue(BlockStateProperties.LAYERS) + 1));
+    });
+    /// Requires: [DiodeBlock]
+    BlockStateProvider DIODE_LOCKED = property(BlockStateProperties.LOCKED, (context, blockState, current) -> PlacementResult.success(((DiodeBlock) blockState.getBlock()).isLocked(context.getLevel(), context.getClickedPos(), blockState)));
+    BlockStateProvider TRAPDOOR_ROTATION = (context, blockState) -> {
+        var clickedFace = context.getClickedFace();
+        Direction facingDirection;
+        Half half;
+
+        if(!context.replacingClickedOnBlock() && clickedFace.getAxis().isHorizontal()) {
+            facingDirection = clickedFace;
+            half = context.getClickLocation().y() - context.getClickedPos().getY() > .5D ? Half.TOP : Half.BOTTOM;
+        } else {
+            facingDirection = context.getHorizontalDirection().getOpposite();
+            half = clickedFace == Direction.UP ? Half.BOTTOM : Half.TOP;
+        }
+
+        return PlacementResult.success(blockState
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, facingDirection)
+                .setValue(BlockStateProperties.HALF, half)
+        );
+    };
+    BlockStateProvider OPEN_FROM_POWERED = copyValue(BlockStateProperties.POWERED, BlockStateProperties.OPEN);
+    /// Requires: [DetectorRailBlock]
+    BlockStateProvider DETECTOR_RAIL_POWERED = property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(!((DetectorRailBlockAccessor) blockState.getBlock()).PlacementPreview$getInteractingMinecartOfType(context.getLevel(), context.getClickedPos(), AbstractMinecart.class, Predicates.alwaysTrue()).isEmpty()));
+    /// Requires: [PoweredRailBlock]
+    BlockStateProvider POWERED_RAIL_POWERED = property(BlockStateProperties.POWERED, (context, blockState, current) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var hasPower = level.hasNeighborSignal(pos);
+
+        if(!hasPower) {
+            var rail = (PoweredRailBlockAccessor) blockState.getBlock();
+            hasPower = rail.PlacementPreview$findPoweredRailSignal(level, pos, blockState, true, 0) ||
+                    rail.PlacementPreview$findPoweredRailSignal(level, pos, blockState, false, 0);
+        }
+
+        return PlacementResult.success(hasPower);
+    });
+    /// Requires: [VineBlock]
+    BlockStateProvider VINE_ATTACHMENT = (context, blockState) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var existingBlockState = level.getBlockState(pos);
+        var clickedVine = existingBlockState.is(blockState.getBlock());
+        var result = clickedVine ? existingBlockState : blockState;
+        var vine = (VineBlockAccessor) result.getBlock();
+
+        for(var direction : context.getNearestLookingDirections()) {
+            if(direction == Direction.DOWN) {
+                continue;
+            }
+
+            var property = VineBlock.getPropertyForFace(direction);
+            var faceOccupied = clickedVine && existingBlockState.getValue(property);
+
+            if(!faceOccupied && vine.PlacementPreview$canSupportAtFace(level, pos, direction)) {
+                return PlacementResult.success(result.setValue(property, true));
+            }
+        }
+
+        return PlacementResult.failure(blockState);
+    };
+    /// Requires: [MultifaceBlock]
+    BlockStateProvider MULTIFACE = (context, blockState) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var existingBlockState = level.getBlockState(pos);
+        var block = (MultifaceBlock) blockState.getBlock();
+        var result = existingBlockState.is(block) ? existingBlockState : blockState;
+
+        for(var direction : context.getNearestLookingDirections()) {
+            if(block.isValidStateForPlacement(level, existingBlockState, pos, direction)) {
+                return PlacementResult.success(result.setValue(MultifaceBlock.getFaceProperty(direction), true));
+            }
+        }
+
+        return PlacementResult.failure(blockState);
+    };
+    /// Requires: [FenceGateBlock]
+    BlockStateProvider FENCE_GATE_IN_WALL = property(BlockStateProperties.IN_WALL, (context, blockState, current) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var axis = context.getHorizontalDirection().getAxis();
+        var block = (FenceGateBlockAccessor) blockState.getBlock();
+        var inWall = false;
+
+        if(axis == Direction.Axis.X) {
+            inWall = block.PlacementPreview$isWall(level.getBlockState(pos.north())) ||
+                    block.PlacementPreview$isWall(level.getBlockState(pos.south()));
+        } else if(axis == Direction.Axis.Z) {
+            inWall = block.PlacementPreview$isWall(level.getBlockState(pos.east())) ||
+                    block.PlacementPreview$isWall(level.getBlockState(pos.west()));
+        }
+
+        return PlacementResult.success(inWall);
+    });
+    BlockStateProvider SLAB_TYPE = property(BlockStateProperties.SLAB_TYPE, (context, blockState, current) -> {
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var existingBlockState = level.getBlockState(pos);
+
+        if(existingBlockState.is(blockState.getBlock())) {
+            return PlacementResult.success(SlabType.DOUBLE);
+        }
+
+        var clickedFace = context.getClickedFace();
+        return PlacementResult.success(clickedFace != Direction.DOWN && (clickedFace == Direction.UP || !(context.getClickLocation().y() - pos.getY() > .5D)) ? SlabType.BOTTOM : SlabType.TOP);
+    });
+    BlockStateProvider HAS_EYE_TRUE = forced(BlockStateProperties.EYE, true);
+    BlockStateProvider HAS_EYE_FALSE = forced(BlockStateProperties.EYE, false);
+    BlockStateProvider LIT = property(BlockStateProperties.LIT, (context, blockState, current) -> PlacementResult.success(context.getLevel().hasNeighborSignal(context.getClickedPos())));
+    BlockStateProvider FACING_HOPPER = property(BlockStateProperties.FACING_HOPPER, (context, blockState, current) -> {
+        var direction = context.getClickedFace().getOpposite();
+        return PlacementResult.success(direction.getAxis().isVertical() ? Direction.DOWN : direction);
+    });
+    BlockStateProvider ENABLED_TRUE = forced(BlockStateProperties.ENABLED, true);
+    BlockStateProvider ENABLED_FALSE = forced(BlockStateProperties.ENABLED, false);
+    /// Requires: [DiodeBlock]
+    BlockStateProvider POWERED_COMPARATOR = property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(((DiodeBlockAccessor) blockState.getBlock()).PlacementPreview$shouldTurnOn(context.getLevel(), context.getClickedPos(), blockState)));
+    /// Requires: [RedStoneWireBlock]
+    BlockStateProvider REDSTONE_WIRE_POWER = property(BlockStateProperties.POWER, (context, blockState, current) -> {
+        // experimental redstone while looks more complicated
+        // this mostly to gather up all the neighbor signals
+        // everything comes down to getting the block and incoming wire signal
+        // and using the Math.max() of the 2 values
+        // which is what the default evaluator does
+        return PlacementResult.success(((DefaultRedstoneWireEvaluatorAccessor) ((RedStoneWireBlock) blockState.getBlock()).evaluator).PlacementPreview$calculateTargetStrength(context.getLevel(), context.getClickedPos()));
+    });
+    BlockStateProvider END_ROD_FACING = property(BlockStateProperties.FACING, (context, blockState, current) -> {
+        var clickedFace = context.getClickedFace();
+        var existingBlockState = context.getLevel().getBlockState(context.getClickedPos().relative(clickedFace.getOpposite()));
+        return PlacementResult.success(existingBlockState.is(blockState.getBlock()) && existingBlockState.getValue(BlockStateProperties.FACING) == clickedFace ? clickedFace.getOpposite() : clickedFace);
+    });
+    BlockStateProvider CHORUS_PLANT_CONNECTIONS = (context, blockState) -> PlacementResult.success(ChorusPlantBlock.getStateWithConnections(context.getLevel(), context.getClickedPos(), blockState));
+    BlockStateProvider EGGS = transforming(
+            PlacementValidators.SAME_BLOCK.negate(),
+            property(BlockStateProperties.EGGS, (context, blockState, current) -> PlacementResult.success(Math.min(TurtleEggBlock.MAX_EGGS, context.getLevel().getBlockState(context.getClickedPos()).getValue(BlockStateProperties.EGGS) + 1)))
+    );
+    BlockStateProvider PICKELS = transforming(
+            PlacementValidators.SAME_BLOCK.negate(),
+            property(BlockStateProperties.PICKLES, (context, blockState, current) -> PlacementResult.success(Math.min(SeaPickleBlock.MAX_PICKLES, context.getLevel().getBlockState(context.getClickedPos()).getValue(BlockStateProperties.PICKLES) + 1)))
+    );
+
+    static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
+        return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
+                .map(newValue -> blockState.setValue(property, newValue), newValue -> blockState);
+    }
+
+    static <TValue extends Comparable<TValue>> BlockStateProvider forced(Property<TValue> property, TValue value) {
+        return property(property, (context, blockState, current) -> PlacementResult.success(value));
+    }
+
+    static <TValue extends Comparable<TValue>> BlockStateProvider copyValue(Property<TValue> source, Property<TValue> destination) {
+        return (context, blockState) -> PlacementResult.success(blockState.setValue(destination, blockState.getValue(source)));
+    }
+
+    static BlockStateProvider transforming(PlacementValidator validator, BlockStateProvider transformer) {
+        return either(validator, BlockStateProvider.SUCCESS, transformer);
+    }
+
+    static BlockStateProvider itemTransformer(TypedInstance<Item> item) {
+        return itemTransformer(item.typeHolder().value());
+    }
+
+    static BlockStateProvider itemTransformer(Item item) {
+        return (context, blockState) -> PlacementPreview.API.item2BlockSuppliers().get(item).apply(context, item);
+    }
+
+    static BlockStateProvider blockTransformer(Block block) {
+        return toBlockTransformer((context, blockState) -> block);
+    }
+
+    static BlockStateProvider blockTransformer(BlockState forcedBlockState) {
+        return toBlockStateTransformer((context, blockState) -> forcedBlockState);
+    }
+
+    static BlockStateProvider toBlockTransformer(BiFunction<BlockPlaceContext, BlockState, Block> mapper) {
+        return toBlockStateTransformer((context, blockState) -> BlockStateHelper.getDefaultBlockState(context.getItemInHand(), mapper.apply(context, blockState)));
+    }
+
+    static BlockStateProvider toBlockStateTransformer(BiFunction<BlockPlaceContext, BlockState, BlockState> mapper) {
+        return (context, blockState) -> {
+            var remapped = mapper.apply(context, blockState);
+            return PlacementPreview.API.blockStateProviders().get(remapped).apply(context, BlockStateHelper.copyFrom(blockState, remapped));
+        };
+    }
+
+    static BlockStateProvider either(PlacementValidator validator, BlockStateProvider trueProvider, BlockStateProvider falseProvider) {
+        return (context, blockState) -> validator.test(context, blockState) ? trueProvider.apply(context, blockState) : falseProvider.apply(context, blockState);
+    }
+
+    interface Blocks {
+        BlockStateProvider MANGROVE_PROPAGULE = WATERLOGGED.andThen(AGE_4_MAX);
+        BlockStateProvider LEAVES = PERSISTENT_TRUE.andThen(WATERLOGGED).andThen(LEAVES_DISTANCE);
+        BlockStateProvider RAIL = RAIL_SHAPE.andThen(WATERLOGGED).andThen(RAIL_STATE);
+        BlockStateProvider POWERED_RAIL = RAIL.andThen(POWERED_RAIL_POWERED);
+        BlockStateProvider DETECTOR_RAIL = RAIL.andThen(DETECTOR_RAIL_POWERED);
+        BlockStateProvider PISTON = FACING_ALT.andThen(PISTON_EXTENDED);
+        BlockStateProvider SHELF = HORIZONTAL_FACING_ALT.andThen(POWERED).andThen(WATERLOGGED);
+        BlockStateProvider CREAKING_HEART = ROTATED_PILLAR.andThen(CREAKING_HEART_TYPE);
+        BlockStateProvider CHEST = CHEST_TYPE.andThen(WATERLOGGED);
+        BlockStateProvider ENDER_CHEST = HORIZONTAL_FACING_ALT.andThen(WATERLOGGED);
+        BlockStateProvider STANDING_SIGN = ROTATION_ALT.andThen(WATERLOGGED);
+        BlockStateProvider DOOR = HORIZONTAL_FACING.andThen(DOOR_HINGE).andThen(POWERED_DOUBLE).andThen(OPEN_FROM_POWERED);
+        BlockStateProvider LADDER = WALL_ATTACHMENT_ALT.andThen(LADDER_VALIDTION).andThen(WATERLOGGED);
+        BlockStateProvider WALL_SIGN = WALL_ATTACHMENT_ALT.andThen(WATERLOGGED);
+        BlockStateProvider HANGING_SIGN = HANGING_SIGN_ATTACHMENT.andThen(WATERLOGGED);
+        BlockStateProvider WALL_HANGING_SIGN = WALL_HANGING_SIGN_ATTACHMENT.andThen(WATERLOGGED);
+        BlockStateProvider REDSTONE_WALL_TORCH = WALL_ATTACHMENT_ALT.andThen(REDSTONE_TORCH_LIT);
+        BlockStateProvider FENCE = ConnectionBlockStateProvider.FENCE.andThen(WATERLOGGED);
+        BlockStateProvider REPEATER = HORIZONTAL_FACING_ALT.andThen(DIODE_LOCKED);
+        BlockStateProvider TRAPDOOR = TRAPDOOR_ROTATION.andThen(POWERED).andThen(OPEN_FROM_POWERED).andThen(WATERLOGGED);
+        BlockStateProvider IRON_BAR = ConnectionBlockStateProvider.IRON_BARS.andThen(WATERLOGGED);
+        BlockStateProvider CHAIN = ROTATED_PILLAR.andThen(WATERLOGGED);
+        BlockStateProvider FENCE_GATE = HORIZONTAL_FACING.andThen(FENCE_GATE_IN_WALL).andThen(POWERED).andThen(OPEN_FROM_POWERED);
+        BlockStateProvider SLAB = WATERLOGGED.andThen(SLAB_TYPE);
+        BlockStateProvider WALL = ConnectionBlockStateProvider.WALL.andThen(WATERLOGGED);
+        BlockStateProvider END_PORTAL_FRAME = HORIZONTAL_FACING_ALT.andThen(HAS_EYE_FALSE);
+        BlockStateProvider HOPPER = FACING_HOPPER.andThen(ENABLED_TRUE);
+        BlockStateProvider COMPARATOR = HORIZONTAL_FACING_ALT.andThen(POWERED_COMPARATOR);
+        BlockStateProvider REDSTONE_WIRE = REDSTONE_WIRE_CONNECTIONS.andThen(REDSTONE_WIRE_POWER);
+        BlockStateProvider SHULKER_BOX = either(
+                (context, blockState) -> context.getLevel().isEmptyBlock(context.getClickedPos().relative(context.getClickedFace().getOpposite())),
+                BlockStateProviders.FACING_ALT,
+                BlockStateProviders.CLICKED_FACE
+        );
+        BlockStateProvider CONCRETE_POWDER = transforming(
+                (context, blockState) -> {
+                    var level = context.getLevel();
+                    var pos = context.getClickedPos();
+                    return !ConcretePowderBlock.shouldSolidify(level, pos, level.getBlockState(pos));
+                },
+                toBlockTransformer((context, blockState) -> ((ConcretePowderBlock) blockState.getBlock()).concrete)
+        );
+        BlockStateProvider DRIED_GHAST = WATERLOGGED.andThen(HORIZONTAL_FACING_ALT);
+        BlockStateProvider CORAL = coral(
+                (context, blockState) -> ((CoralBlockAccessor) blockState.getBlock()).PlacementPreview$scanForWater(context.getLevel(), context.getClickedPos()),
+                block -> ((CoralBlock) block).deadBlock
+        );
+        BlockStateProvider CORAL_PLANT = WATERLOGGED.andThen(coral(
+                (context, blockState) -> BaseCoralFanBlock.scanForWater(blockState, context.getLevel(), context.getClickedPos()),
+                block -> ((CoralPlantBlock) block).deadBlock
+        ));
+        BlockStateProvider CORAL_FAN = WATERLOGGED.andThen(coral(
+                (context, blockState) -> BaseCoralFanBlock.scanForWater(blockState, context.getLevel(), context.getClickedPos()),
+                block -> ((CoralFanBlock) block).deadBlock
+        ));
+        BlockStateProvider DEAD_WALL_CORAL_FAN = WATERLOGGED.andThen(WALL_ATTACHMENT_ALT);
+        BlockStateProvider WALL_CORAL_FAN = DEAD_WALL_CORAL_FAN.andThen(coral(
+                (context, blockState) -> BaseCoralFanBlock.scanForWater(blockState, context.getLevel(), context.getClickedPos()),
+                block -> ((CoralWallFanBlock) block).deadBlock
+        ));
+        BlockStateProvider SEA_PICKLE = PICKELS.andThen(WATERLOGGED);
+        BlockStateProvider BAMBOO_STALK = (context, blockState) -> {
+            var level = context.getLevel();
+            var pos = context.getClickedPos();
+
+            var belowPos = pos.below();
+            var belowBlockState = level.getBlockState(belowPos);
+            var soilDecision = belowBlockState.canSustainPlant(level, belowPos, Direction.UP, blockState);
+            var placeable = soilDecision.isDefault() ? belowBlockState.is(BlockTags.SUPPORTS_BAMBOO) : soilDecision.isTrue();
+            var result = blockState;
+
+            if(belowBlockState.is(net.minecraft.world.level.block.Blocks.BAMBOO_SAPLING)) {
+                result = blockState.setValue(BlockStateProperties.AGE_1, BambooStalkBlock.STAGE_GROWING);
+            } else if(belowBlockState.is(net.minecraft.world.level.block.Blocks.BAMBOO)) {
+                var age = belowBlockState.getValue(BlockStateProperties.AGE_1);
+                result = blockState.setValue(BlockStateProperties.AGE_1, age > 0 ? BambooStalkBlock.STAGE_DONE_GROWING : BambooStalkBlock.STAGE_GROWING);
+            } else {
+                var aboveBlockState = level.getBlockState(pos.above());
+
+                if(aboveBlockState.is(net.minecraft.world.level.block.Blocks.BAMBOO)) {
+                    result = blockState.setValue(BlockStateProperties.AGE_1, aboveBlockState.getValue(BlockStateProperties.AGE_1));
+                } else {
+                    var transformed = BlockStateProvider.applyDefaults(context, net.minecraft.world.level.block.Blocks.BAMBOO_SAPLING);
+                    result = transformed.value();
+                    placeable = transformed.isSuccess();
+                }
+            }
+
+            if(!level.getFluidState(pos).isEmpty()) {
+                placeable = false;
+            }
+
+            return PlacementResult.of(result, placeable);
+        };
+        BlockStateProvider SCAFFOLDING = WATERLOGGED.andThen((context, blockState) -> {
+            var level = context.getLevel();
+            var pos = context.getClickedPos();
+            var distance = ScaffoldingBlock.getDistance(level, pos);
+            return PlacementResult.success(blockState
+                    .setValue(BlockStateProperties.STABILITY_DISTANCE, distance)
+                    .setValue(BlockStateProperties.BOTTOM, ((ScaffoldingBlockAccessor) blockState.getBlock()).PlacementPreview$isBottom(level, pos, distance))
+            );
+        });
+
+        static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
+            return transforming(
+                    validator,
+                    toBlockTransformer((context, blockState) -> deadBlockMapper.apply(blockState.getBlock()))
+            );
+        }
+    }
+}

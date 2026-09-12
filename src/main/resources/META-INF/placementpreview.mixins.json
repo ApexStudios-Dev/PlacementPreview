@@ -1,0 +1,30 @@
+{
+  "$schema": "https://www.schemastore.org/sponge-mixins.json",
+  "required": true,
+  "package": "dev.apexstudios.placementpreview.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "BlockItemAccessor",
+    "ChestBlockAccessor",
+    "CoralBlockAccessor",
+    "DefaultRedstoneWireEvaluatorAccessor",
+    "DetectorRailBlockAccessor",
+    "DiodeBlockAccessor",
+    "DoorBlockAccessor",
+    "FenceGateBlockAccessor",
+    "FireBlockAccessor",
+    "NoteBlockAccessor",
+    "PistonBaseBlockAccessor",
+    "PoweredRailBlockAccessor",
+    "RailStateMixin",
+    "RedStoneTorchBlockAccessor",
+    "RedStoneWireBlockAccessor",
+    "ScaffoldingBlockAccessor",
+    "StandingAndWallBlockItemAccessor",
+    "VineBlockAccessor",
+    "WallBlockAccessor"
+  ],
+  "client": [],
+  "server": [],
+  "minVersion": "0.8"
+}

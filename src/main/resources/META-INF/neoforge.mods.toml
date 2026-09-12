@@ -1,0 +1,39 @@
+license = "AllRightsReserved"
+issueTrackerURL = "https://github.com/ApexStudios-Dev/Issues/issues"
+
+[[mods]]
+modId = "placementpreview"
+version = "${file.jarVersion}"
+displayName = "PlacementPreview"
+credits = "Apex - Programming"
+authors = "Apex"
+description = "PlacementPreview is a mod for Minecraft (NeoForge) which attempts to visualize the placement of the item the player is currently holding."
+#bannerFile = "banner.png"
+#iconFile = "icon.png"
+#displayURL = "https://modrinth.com/mod/ghost-renderer"
+
+[[dependencies.placementpreview]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.2,26.3)"
+ordering = "NONE"
+side = "BOTH"
+[[dependencies.placementpreview]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.2-alpha,26.3)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.placementpreview]]
+modId = "ghostrenderer"
+type = "required"
+versionRange = "[26.2,26.3)"
+#[dependencies.placementpreview.mc-publish]
+#modrinth = "??"
+#curseforge = "??"
+
+[[accessTransformers]]
+file = "META-INF/accesstransformer.cfg"
+[[mixins]]
+config = "META-INF/placementpreview.mixins.json"
