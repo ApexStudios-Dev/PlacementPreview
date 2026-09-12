@@ -21,7 +21,6 @@ import dev.apexstudios.placementpreview.mixin.PoweredRailBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.RedStoneTorchBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.RedStoneWireBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.ScaffoldingBlockAccessor;
-import dev.apexstudios.placementpreview.mixin.VineBlockAccessor;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 import net.minecraft.core.Direction;
@@ -50,7 +49,6 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.LeavesBlock;
-import net.minecraft.world.level.block.MultifaceBlock;
 import net.minecraft.world.level.block.NoteBlock;
 import net.minecraft.world.level.block.PoweredRailBlock;
 import net.minecraft.world.level.block.RailState;
@@ -61,11 +59,9 @@ import net.minecraft.world.level.block.SeaPickleBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SnowyBlock;
 import net.minecraft.world.level.block.TurtleEggBlock;
-import net.minecraft.world.level.block.VineBlock;
-import net.minecraft.world.level.block.WallHangingSignBlock;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.AttachFace;
+import net.minecraft.world.level.block.state.properties.BellAttachType;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.state.properties.Half;
@@ -111,42 +107,8 @@ public interface BlockStateProviders {
     BlockStateProvider INSIDE_WATER = PlacementValidators.INSIDE_WATER.asProvider();
     BlockStateProvider POWERED = property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(context.getLevel().hasNeighborSignal(context.getClickedPos())));
     BlockStateProvider POWERED_DOUBLE = POWERED.andThen(property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(current || context.getLevel().hasNeighborSignal(context.getClickedPos().above()))));
-    BlockStateProvider WALL_ATTACHMENT = (context, blockState) -> {
-        var level = context.getLevel();
-        var pos = context.getClickedPos();
-
-        for(var direction : context.getNearestLookingDirections()) {
-            if(!direction.getAxis().isHorizontal()) {
-                continue;
-            }
-
-            var attachmentBlockState = blockState.setValue(BlockStateProperties.HORIZONTAL_FACING, direction);
-
-            if(attachmentBlockState.canSurvive(level, pos)) {
-                return PlacementResult.success(attachmentBlockState);
-            }
-        }
-
-        return HORIZONTAL_FACING.apply(context, blockState).fail();
-    };
-    BlockStateProvider WALL_ATTACHMENT_ALT = (context, blockState) -> {
-        var level = context.getLevel();
-        var pos = context.getClickedPos();
-
-        for(var direction : context.getNearestLookingDirections()) {
-            if(!direction.getAxis().isHorizontal()) {
-                continue;
-            }
-
-            var attachmentBlockState = blockState.setValue(BlockStateProperties.HORIZONTAL_FACING, direction.getOpposite());
-
-            if(attachmentBlockState.canSurvive(level, pos)) {
-                return PlacementResult.success(attachmentBlockState);
-            }
-        }
-
-        return HORIZONTAL_FACING_ALT.apply(context, blockState).fail();
-    };
+    BlockStateProvider WALL_ATTACHMENT = orElse(WallAttachmentBlockStateProvider.HORIZONTAL, HORIZONTAL_FACING.asFailure());
+    BlockStateProvider WALL_ATTACHMENT_ALT = orElse(WallAttachmentBlockStateProvider.HORIZONTAL_ALT, HORIZONTAL_FACING_ALT.asFailure());
     /// Requires: [FireBlock]
     BlockStateProvider FIRE_BLOCK = (context, blockState) -> PlacementResult.success(((FireBlockAccessor) blockState.getBlock()).PlacementPreview$getStateForPlacement(context.getLevel(), context.getClickedPos()));
     BlockStateProvider CREAKING_HEART_TYPE = (context, blockState) -> PlacementResult.success(CreakingHeartBlock.updateState(blockState, context.getLevel(), context.getClickedPos()));
@@ -218,63 +180,15 @@ public interface BlockStateProviders {
                 .setValue(BlockStateProperties.ROTATION_16, attachedToMiddle ? RotationSegment.convertToSegment(context.getRotation() + 180F) : RotationSegment.convertToSegment(context.getRotation()))
         );
     };
-    /// Requires: [WallHangingSignBlock]
-    BlockStateProvider WALL_HANGING_SIGN_ATTACHMENT = (context, blockState) -> {
-        var level = context.getLevel();
-        var pos = context.getClickedPos();
-        var clickedFace = context.getClickedFace();
-
-        for(var direction : context.getNearestLookingDirections()) {
-            var axis = direction.getAxis();
-
-            if(!axis.isHorizontal() || axis.test(clickedFace)) {
-                continue;
-            }
-
-            var attachmentBlockState = blockState.setValue(BlockStateProperties.HORIZONTAL_FACING, direction.getOpposite());
-
-            if(attachmentBlockState.canSurvive(level, pos) && ((WallHangingSignBlock) attachmentBlockState.getBlock()).canPlace(attachmentBlockState, level, pos)) {
-                return PlacementResult.success(attachmentBlockState);
-            }
-        }
-
-        return PlacementResult.failure(blockState);
-    };
-    BlockStateProvider FACING_ATTACHED_HORIZONTAL = (context, blockState) -> {
-        var level = context.getLevel();
-        var pos = context.getClickedPos();
-
-        for(var direction : context.getNearestLookingDirections()) {
-            var attached = AttachFace.WALL;
-            var facingDirection = direction.getOpposite();
-
-            if(direction.getAxis().isVertical()) {
-                attached = direction == Direction.UP ? AttachFace.CEILING : AttachFace.FLOOR;
-                facingDirection = context.getHorizontalDirection();
-            }
-
-            var attachmentBlockState = blockState
-                    .setValue(BlockStateProperties.ATTACH_FACE, attached)
-                    .setValue(BlockStateProperties.HORIZONTAL_FACING, facingDirection);
-
-            if(attachmentBlockState.canSurvive(level, pos)) {
-                return PlacementResult.success(attachmentBlockState);
-            }
-        }
-
-        return PlacementResult.failure(blockState);
-    };
     /// Requires: [RedstoneTorchBlock]
     BlockStateProvider REDSTONE_TORCH_LIT = property(BlockStateProperties.LIT, (context, blockState, current) -> PlacementResult.success(!((RedStoneTorchBlockAccessor) blockState.getBlock()).PlacementPreview$hasNeighborSignal(context.getLevel(), context.getClickedPos(), blockState)));
-    BlockStateProvider SNOW_LAYERS = property(BlockStateProperties.LAYERS, (context, blockState, current) -> {
-        var existingBlockState = context.getLevel().getBlockState(context.getClickedPos());
-
-        if(!existingBlockState.is(blockState.getBlock())) {
-            return PlacementResult.success(current);
-        }
-
-        return PlacementResult.success(Math.min(SnowLayerBlock.MAX_HEIGHT, existingBlockState.getValue(BlockStateProperties.LAYERS) + 1));
-    });
+    BlockStateProvider SNOW_LAYERS = ifTrue(
+            PlacementValidators.SAME_BLOCK,
+            property(BlockStateProperties.LAYERS, (context, blockState, current) -> {
+                var existingBlockState = context.getLevel().getBlockState(context.getClickedPos());
+                return PlacementResult.success(Math.min(SnowLayerBlock.MAX_HEIGHT, existingBlockState.getValue(BlockStateProperties.LAYERS) + 1));
+            })
+    );
     /// Requires: [DiodeBlock]
     BlockStateProvider DIODE_LOCKED = property(BlockStateProperties.LOCKED, (context, blockState, current) -> PlacementResult.success(((DiodeBlock) blockState.getBlock()).isLocked(context.getLevel(), context.getClickedPos(), blockState)));
     BlockStateProvider TRAPDOOR_ROTATION = (context, blockState) -> {
@@ -312,46 +226,6 @@ public interface BlockStateProviders {
 
         return PlacementResult.success(hasPower);
     });
-    /// Requires: [VineBlock]
-    BlockStateProvider VINE_ATTACHMENT = (context, blockState) -> {
-        var level = context.getLevel();
-        var pos = context.getClickedPos();
-        var existingBlockState = level.getBlockState(pos);
-        var clickedVine = existingBlockState.is(blockState.getBlock());
-        var result = clickedVine ? existingBlockState : blockState;
-        var vine = (VineBlockAccessor) result.getBlock();
-
-        for(var direction : context.getNearestLookingDirections()) {
-            if(direction == Direction.DOWN) {
-                continue;
-            }
-
-            var property = VineBlock.getPropertyForFace(direction);
-            var faceOccupied = clickedVine && existingBlockState.getValue(property);
-
-            if(!faceOccupied && vine.PlacementPreview$canSupportAtFace(level, pos, direction)) {
-                return PlacementResult.success(result.setValue(property, true));
-            }
-        }
-
-        return PlacementResult.failure(blockState);
-    };
-    /// Requires: [MultifaceBlock]
-    BlockStateProvider MULTIFACE = (context, blockState) -> {
-        var level = context.getLevel();
-        var pos = context.getClickedPos();
-        var existingBlockState = level.getBlockState(pos);
-        var block = (MultifaceBlock) blockState.getBlock();
-        var result = existingBlockState.is(block) ? existingBlockState : blockState;
-
-        for(var direction : context.getNearestLookingDirections()) {
-            if(block.isValidStateForPlacement(level, existingBlockState, pos, direction)) {
-                return PlacementResult.success(result.setValue(MultifaceBlock.getFaceProperty(direction), true));
-            }
-        }
-
-        return PlacementResult.failure(blockState);
-    };
     /// Requires: [FenceGateBlock]
     BlockStateProvider FENCE_GATE_IN_WALL = property(BlockStateProperties.IN_WALL, (context, blockState, current) -> {
         var level = context.getLevel();
@@ -473,6 +347,10 @@ public interface BlockStateProviders {
         return ifTrue(validator.negate(), provider);
     }
 
+    static BlockStateProvider orElse(BlockStateProvider provider, BlockStateProvider elseProvider) {
+        return (context, blockState) -> provider.apply(context, blockState).flatMapFailure(state -> elseProvider.apply(context, state));
+    }
+
     interface Blocks {
         BlockStateProvider MANGROVE_PROPAGULE = WATERLOGGED.andThen(AGE_4_MAX);
         BlockStateProvider LEAVES = PERSISTENT_TRUE.andThen(WATERLOGGED).andThen(LEAVES_DISTANCE);
@@ -489,7 +367,7 @@ public interface BlockStateProviders {
         BlockStateProvider LADDER = WALL_ATTACHMENT_ALT.andThen(LADDER_VALIDTION).andThen(WATERLOGGED);
         BlockStateProvider WALL_SIGN = WALL_ATTACHMENT_ALT.andThen(WATERLOGGED);
         BlockStateProvider HANGING_SIGN = HANGING_SIGN_ATTACHMENT.andThen(WATERLOGGED);
-        BlockStateProvider WALL_HANGING_SIGN = WALL_HANGING_SIGN_ATTACHMENT.andThen(WATERLOGGED);
+        BlockStateProvider WALL_HANGING_SIGN = WallAttachmentBlockStateProvider.WALL_HANGING_SIGN.andThen(WATERLOGGED);
         BlockStateProvider REDSTONE_WALL_TORCH = WALL_ATTACHMENT_ALT.andThen(REDSTONE_TORCH_LIT);
         BlockStateProvider FENCE = ConnectionBlockStateProvider.FENCE.andThen(WATERLOGGED);
         BlockStateProvider REPEATER = HORIZONTAL_FACING_ALT.andThen(DIODE_LOCKED);
@@ -577,12 +455,47 @@ public interface BlockStateProviders {
                     .setValue(BlockStateProperties.BOTTOM, ((ScaffoldingBlockAccessor) blockState.getBlock()).PlacementPreview$isBottom(level, pos, distance))
             );
         });
-        BlockStateProvider LECTERN = HORIZONTAL_FACING_ALT.andThen(ifTrue(PlacementValidators.GAMEMASTER_ALLOWED,
-                property(BlockStateProperties.HAS_BOOK, (context, blockState, current) -> {
-                    var blockEntityData = context.getItemInHand().get(DataComponents.BLOCK_ENTITY_DATA);
-                    return PlacementResult.success(blockEntityData != null && blockEntityData.contains("Book"));
-                })
-        ));
+        BlockStateProvider LECTERN = HORIZONTAL_FACING_ALT.andThen(ifTrue(PlacementValidators.GAMEMASTER_ALLOWED, property(BlockStateProperties.HAS_BOOK, (context, blockState, current) -> {
+            var blockEntityData = context.getItemInHand().get(DataComponents.BLOCK_ENTITY_DATA);
+            return PlacementResult.success(blockEntityData != null && blockEntityData.contains("Book"));
+        })));
+        BlockStateProvider BELL = (context, blockState) -> {
+            var level = context.getLevel();
+            var pos = context.getClickedPos();
+            var clickedFace = context.getClickedFace();
+            var axis = clickedFace.getAxis();
+            BlockState result;
+
+            if(axis.isVertical()) {
+                result = blockState.setValue(BlockStateProperties.BELL_ATTACHMENT, clickedFace == Direction.DOWN ? BellAttachType.CEILING : BellAttachType.FLOOR)
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, context.getHorizontalDirection());
+            } else {
+                var northPos = pos.north();
+                var eastPos = pos.east();
+                var southPos = pos.south();
+                var westPos = pos.west();
+
+                var doubleAttached = (
+                        axis == Direction.Axis.X &&
+                                level.getBlockState(westPos).isFaceSturdy(level, westPos, Direction.EAST) &&
+                                level.getBlockState(eastPos).isFaceSturdy(level, eastPos, Direction.WEST)
+                ) || (axis == Direction.Axis.Z &&
+                        level.getBlockState(northPos).isFaceSturdy(level, northPos, Direction.SOUTH) &&
+                        level.getBlockState(southPos).isFaceSturdy(level, southPos, Direction.NORTH)
+                );
+
+                result = blockState.setValue(BlockStateProperties.BELL_ATTACHMENT, doubleAttached ? BellAttachType.DOUBLE_WALL : BellAttachType.SINGLE_WALL)
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, clickedFace.getOpposite());
+
+                if(!result.canSurvive(level, pos)) {
+                    var belowPos = pos.below();
+                    var canAttachBelow = level.getBlockState(belowPos).isFaceSturdy(level, belowPos, Direction.UP);
+                    result = blockState.setValue(BlockStateProperties.BELL_ATTACHMENT, canAttachBelow ? BellAttachType.FLOOR : BellAttachType.CEILING);
+                }
+            }
+
+            return PlacementResult.of(result, result.canSurvive(level, pos));
+        };
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(

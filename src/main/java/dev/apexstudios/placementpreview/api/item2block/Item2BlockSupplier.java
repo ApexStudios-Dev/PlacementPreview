@@ -19,6 +19,14 @@ public interface Item2BlockSupplier {
 
     PlacementResult<BlockState> apply(BlockPlaceContext context, Item item);
 
+    default Item2BlockSupplier asSuccess() {
+        return (context, item) -> apply(context, item).asSuccess();
+    }
+
+    default Item2BlockSupplier asFailure() {
+        return (context, item) -> apply(context, item).asFailure();
+    }
+
     static Item2BlockSupplier standingAndWall(Direction attachmentDirection, Block standingBlock, Block wallBlock, PlacementValidator validator) {
         var attachmentDirectionOpposite = attachmentDirection.getOpposite();
 

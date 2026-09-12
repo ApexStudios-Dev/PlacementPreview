@@ -17,6 +17,14 @@ public interface BlockStateProvider {
 
     PlacementResult<BlockState> apply(BlockPlaceContext context, BlockState blockState);
 
+    default BlockStateProvider asSuccess() {
+        return andThen(SUCCESS);
+    }
+
+    default BlockStateProvider asFailure() {
+        return andThen(FAILURE);
+    }
+
     default BlockStateProvider andThen(BlockStateProvider after) {
         Objects.requireNonNull(after);
         return (context, blockState) -> BlockStateProvider.this.apply(context, blockState)
