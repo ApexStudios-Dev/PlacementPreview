@@ -139,6 +139,18 @@ public abstract class WallAttachmentBlockStateProvider implements BlockStateProv
         }
     };
 
+    public static final BlockStateProvider LANTERN = new WallAttachmentBlockStateProvider() {
+        @Override
+        protected boolean validAttachmentDirection(BlockPlaceContext context, BlockState blockState, Direction direction) {
+            return direction.getAxis().isVertical();
+        }
+
+        @Override
+        protected BlockState setAttachmentDirection(BlockPlaceContext context, BlockState blockState, Direction direction) {
+            return blockState.setValue(BlockStateProperties.HANGING, direction == Direction.UP);
+        }
+    };
+
     @Override
     public PlacementResult<BlockState> apply(BlockPlaceContext context, BlockState blockState) {
         var directions = attachmentDirections(context, blockState);

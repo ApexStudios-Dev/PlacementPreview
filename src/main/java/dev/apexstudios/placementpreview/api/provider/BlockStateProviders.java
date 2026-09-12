@@ -496,6 +496,7 @@ public interface BlockStateProviders {
 
             return PlacementResult.of(result, result.canSurvive(level, pos));
         };
+        BlockStateProvider LANTERN = WallAttachmentBlockStateProvider.LANTERN.andThen(WATERLOGGED);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(
