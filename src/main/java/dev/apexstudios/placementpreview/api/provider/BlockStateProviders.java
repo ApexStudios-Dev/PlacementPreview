@@ -23,6 +23,7 @@ import dev.apexstudios.placementpreview.mixin.PoweredRailBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.RedStoneTorchBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.RedStoneWireBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.ScaffoldingBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.SpeleothemBlockAccessor;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 import net.minecraft.core.Direction;
@@ -65,6 +66,7 @@ import net.minecraft.world.level.block.ScaffoldingBlock;
 import net.minecraft.world.level.block.SeaPickleBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SnowyBlock;
+import net.minecraft.world.level.block.SpeleothemBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
@@ -333,6 +335,26 @@ public interface BlockStateProviders {
     BlockStateProvider HALF = property(BlockStateProperties.HALF, (context, blockState, current) -> PlacementResult.success(topOrBottom(context, Half.TOP, Half.BOTTOM)));
     BlockStateProvider STAIR_SHAPE = property(BlockStateProperties.STAIRS_SHAPE, (context, blockState, current) -> PlacementResult.success(StairBlock.getStairsShape(blockState, context.getLevel(), context.getClickedPos())));
     BlockStateProvider LEAST_OXIDIZED_COPPER_CHEST = (context, blockState) -> PlacementResult.success(CopperChestBlock.getLeastOxidizedChestOfConnectedBlocks(blockState, context.getLevel(), context.getClickedPos()));
+    /// Requires: [SpeleothemBlock]
+    BlockStateProvider SPELEOTHEM = (context, blockState) -> {
+        var block = (SpeleothemBlockAccessor) blockState.getBlock();
+        var level = context.getLevel();
+        var pos = context.getClickedPos();
+        var defaultTipDirection = context.getNearestLookingVerticalDirection().getOpposite();
+        var tipDirection = block.PlacementPreview$calculateTipDirection(level, pos, defaultTipDirection);
+
+        if(tipDirection == null) {
+            return PlacementResult.failure(blockState);
+        }
+
+        var mergingOpposingTips = !context.isSecondaryUseActive();
+        var thickness = block.PlacementPreview$calculateSpeleothemThickness(level, pos, tipDirection, mergingOpposingTips);
+
+        return PlacementResult.success(blockState
+                .setValue(BlockStateProperties.VERTICAL_DIRECTION, tipDirection)
+                .setValue(BlockStateProperties.SPELEOTHEM_THICKNESS, thickness)
+        );
+    };
 
     static <TValue extends Comparable<TValue>> BlockStateProvider property(Property<TValue> property, BlockStateProvider.ForProperty<TValue> mapper) {
         return (context, blockState) -> mapper.apply(context, blockState, blockState.getValue(property))
@@ -560,6 +582,7 @@ public interface BlockStateProviders {
         BlockStateProvider COPPER_CHEST = CHEST.andThen(LEAST_OXIDIZED_COPPER_CHEST);
         BlockStateProvider COPPER_GOLEM = HORIZONTAL_FACING_ALT.andThen(WATERLOGGED);
         BlockStateProvider LIGHTNING_ROD = CLICKED_FACE_FIXED.andThen(WATERLOGGED);
+        BlockStateProvider SPELEOTHEM_BLOCK = SPELEOTHEM.andThen(WATERLOGGED);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(

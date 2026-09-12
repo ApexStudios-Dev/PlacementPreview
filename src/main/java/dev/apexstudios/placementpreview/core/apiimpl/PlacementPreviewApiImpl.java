@@ -906,8 +906,8 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         event.register(Blocks.COPPER_GOLEM_STATUE, BlockStateProviders.Blocks.COPPER_GOLEM);
         event.register(Blocks.LIGHTNING_ROD, BlockStateProviders.Blocks.LIGHTNING_ROD);
         // event.register(Blocks.DRIPSTONE_BLOCK, );
-        // event.register(Blocks.POINTED_DRIPSTONE, );
-        // event.register(Blocks.SULFUR_SPIKE, );
+        event.register(Blocks.POINTED_DRIPSTONE, BlockStateProviders.Blocks.SPELEOTHEM_BLOCK);
+        event.register(Blocks.SULFUR_SPIKE, BlockStateProviders.Blocks.SPELEOTHEM_BLOCK);
         event.register(Blocks.CAVE_VINES, BlockStateProviders.GROWING_PLANT);
         event.register(Blocks.CAVE_VINES_PLANT, BlockStateProviders.GROWING_PLANT);
         // event.register(Blocks.SPORE_BLOSSOM, );
