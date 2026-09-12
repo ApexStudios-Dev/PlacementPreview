@@ -726,16 +726,16 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         event.register(Blocks.END_STONE_BRICK_WALL, BlockStateProviders.Blocks.WALL);
         event.register(Blocks.DIORITE_WALL, BlockStateProviders.Blocks.WALL);
         event.register(Blocks.SCAFFOLDING, BlockStateProviders.Blocks.SCAFFOLDING);
-        // event.register(Blocks.LOOM, );
-        // event.register(Blocks.BARREL, );
+        event.register(Blocks.LOOM, BlockStateProviders.HORIZONTAL_FACING_ALT);
+        event.register(Blocks.BARREL, BlockStateProviders.FACING_ALT);
         event.register(Blocks.SMOKER, BlockStateProviders.HORIZONTAL_FACING_ALT);
         event.register(Blocks.BLAST_FURNACE, BlockStateProviders.HORIZONTAL_FACING_ALT);
         // event.register(Blocks.CARTOGRAPHY_TABLE, );
         // event.register(Blocks.FLETCHING_TABLE, );
         event.register(Blocks.GRINDSTONE, BlockStateProviders.FACING_ATTACHED_HORIZONTAL);
-        // event.register(Blocks.LECTERN, );
+        event.register(Blocks.LECTERN, BlockStateProviders.Blocks.LECTERN);
         // event.register(Blocks.SMITHING_TABLE, );
-        // event.register(Blocks.STONECUTTER, );
+        event.register(Blocks.STONECUTTER, BlockStateProviders.HORIZONTAL_FACING_ALT);
         // event.register(Blocks.BELL, );
         // event.register(Blocks.LANTERN, );
         // event.register(Blocks.SOUL_LANTERN, );
@@ -1526,8 +1526,6 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         // event.register(Items.POLISHED_DEEPSLATE_SLAB, );
         // event.register(Items.DEEPSLATE_BRICK_SLAB, );
         // event.register(Items.DEEPSLATE_TILE_SLAB, );
-        // TODO: Need a better api to update placement contexts
-        // these should be updated prior to running any block state provider
         // event.register(Items.SCAFFOLDING, );
         // event.register(Items.REDSTONE, );
         event.register(Items.REDSTONE_TORCH, Item2BlockSupplier.standingAndWall((StandingAndWallBlockItem) Items.REDSTONE_TORCH));

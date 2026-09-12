@@ -26,6 +26,7 @@ import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 import net.minecraft.core.Direction;
 import net.minecraft.core.TypedInstance;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
 import net.minecraft.world.item.Item;
@@ -464,6 +465,14 @@ public interface BlockStateProviders {
         return (context, blockState) -> validator.test(context, blockState) ? trueProvider.apply(context, blockState) : falseProvider.apply(context, blockState);
     }
 
+    static BlockStateProvider ifTrue(PlacementValidator validator, BlockStateProvider provider) {
+        return (context, blockState) -> validator.test(context, blockState) ? provider.apply(context, blockState) : PlacementResult.success(blockState);
+    }
+
+    static BlockStateProvider ifFalse(PlacementValidator validator, BlockStateProvider provider) {
+        return ifTrue(validator.negate(), provider);
+    }
+
     interface Blocks {
         BlockStateProvider MANGROVE_PROPAGULE = WATERLOGGED.andThen(AGE_4_MAX);
         BlockStateProvider LEAVES = PERSISTENT_TRUE.andThen(WATERLOGGED).andThen(LEAVES_DISTANCE);
@@ -568,6 +577,12 @@ public interface BlockStateProviders {
                     .setValue(BlockStateProperties.BOTTOM, ((ScaffoldingBlockAccessor) blockState.getBlock()).PlacementPreview$isBottom(level, pos, distance))
             );
         });
+        BlockStateProvider LECTERN = HORIZONTAL_FACING_ALT.andThen(ifTrue(PlacementValidators.GAMEMASTER_ALLOWED,
+                property(BlockStateProperties.HAS_BOOK, (context, blockState, current) -> {
+                    var blockEntityData = context.getItemInHand().get(DataComponents.BLOCK_ENTITY_DATA);
+                    return PlacementResult.success(blockEntityData != null && blockEntityData.contains("Book"));
+                })
+        ));
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(
