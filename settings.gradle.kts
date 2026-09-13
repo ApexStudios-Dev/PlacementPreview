@@ -21,7 +21,7 @@ dependencyResolutionManagement {
     versionCatalogs.create("libs") {
         version("neoforge", "26.2.0.0-beta")
 
-        library("ghostrenderer", "dev.apexstudios", "ghostrenderer").version("26.2.2-beta-pr-1")
+        library("ghostrenderer", "dev.apexstudios", "ghostrenderer").version("26.2.3-beta-pr-1")
     }
 }
 

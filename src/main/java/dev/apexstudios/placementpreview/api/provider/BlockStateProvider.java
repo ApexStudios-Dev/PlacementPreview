@@ -27,7 +27,7 @@ public interface BlockStateProvider {
 
     default BlockStateProvider andThen(BlockStateProvider after) {
         Objects.requireNonNull(after);
-        return (context, blockState) -> BlockStateProvider.this.apply(context, blockState)
+        return (context, blockState) -> apply(context, blockState)
                 .flatMapSuccess(state -> after.apply(context, state));
     }
 
