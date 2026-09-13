@@ -636,7 +636,7 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         // event.register(Blocks.DRIED_KELP_BLOCK, );
         event.register(Blocks.TURTLE_EGG, BlockStateProviders.EGGS);
         // event.register(Blocks.SNIFFER_EGG, );
-        // event.register(Blocks.DRIED_GHAST, );
+        event.register(Blocks.DRIED_GHAST, BlockStateProviders.Blocks.DRIED_GHAST);
         // event.register(Blocks.DEAD_TUBE_CORAL_BLOCK, );
         // event.register(Blocks.DEAD_BRAIN_CORAL_BLOCK, );
         // event.register(Blocks.DEAD_BUBBLE_CORAL_BLOCK, );
