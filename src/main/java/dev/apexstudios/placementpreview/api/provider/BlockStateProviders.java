@@ -282,7 +282,7 @@ public interface BlockStateProviders {
     BlockStateProvider ENABLED_TRUE = forced(BlockStateProperties.ENABLED, true);
     BlockStateProvider ENABLED_FALSE = forced(BlockStateProperties.ENABLED, false);
     /// Requires: [DiodeBlock]
-    BlockStateProvider POWERED_COMPARATOR = property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(((DiodeBlockAccessor) blockState.getBlock()).PlacementPreview$shouldTurnOn(context.getLevel(), context.getClickedPos(), blockState)));
+    BlockStateProvider DIODE_COMPARATOR = property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(((DiodeBlockAccessor) blockState.getBlock()).PlacementPreview$shouldTurnOn(context.getLevel(), context.getClickedPos(), blockState)));
     /// Requires: [RedStoneWireBlock]
     BlockStateProvider REDSTONE_WIRE_POWER = property(BlockStateProperties.POWER, (context, blockState, current) -> {
         // experimental redstone while looks more complicated
@@ -471,7 +471,7 @@ public interface BlockStateProviders {
         BlockStateProvider WALL_HANGING_SIGN = WallAttachmentBlockStateProvider.WALL_HANGING_SIGN.andThen(WATERLOGGED);
         BlockStateProvider REDSTONE_WALL_TORCH = WALL_ATTACHMENT_ALT.andThen(REDSTONE_TORCH_LIT);
         BlockStateProvider FENCE = ConnectionBlockStateProvider.FENCE.andThen(WATERLOGGED);
-        BlockStateProvider REPEATER = HORIZONTAL_FACING_ALT.andThen(DIODE_LOCKED);
+        BlockStateProvider REPEATER = HORIZONTAL_FACING_ALT.andThen(DIODE_LOCKED).andThen(ifFalse(PlacementValidators.fromBoolean(BlockStateProperties.LOCKED), DIODE_COMPARATOR));
         BlockStateProvider TRAPDOOR = TRAPDOOR_ROTATION.andThen(POWERED).andThen(OPEN_FROM_POWERED).andThen(WATERLOGGED);
         BlockStateProvider IRON_BAR = ConnectionBlockStateProvider.IRON_BARS.andThen(WATERLOGGED);
         BlockStateProvider CHAIN = ROTATED_PILLAR.andThen(WATERLOGGED);
@@ -480,7 +480,7 @@ public interface BlockStateProviders {
         BlockStateProvider WALL = ConnectionBlockStateProvider.WALL.andThen(WATERLOGGED);
         BlockStateProvider END_PORTAL_FRAME = HORIZONTAL_FACING_ALT.andThen(HAS_EYE_FALSE);
         BlockStateProvider HOPPER = FACING_HOPPER.andThen(ENABLED_TRUE);
-        BlockStateProvider COMPARATOR = HORIZONTAL_FACING_ALT.andThen(POWERED_COMPARATOR);
+        BlockStateProvider COMPARATOR = HORIZONTAL_FACING_ALT.andThen(DIODE_COMPARATOR);
         BlockStateProvider REDSTONE_WIRE = REDSTONE_WIRE_CONNECTIONS.andThen(REDSTONE_WIRE_POWER);
         BlockStateProvider SHULKER_BOX = CLICKED_FACE_FIXED;
         BlockStateProvider CONCRETE_POWDER = transforming(

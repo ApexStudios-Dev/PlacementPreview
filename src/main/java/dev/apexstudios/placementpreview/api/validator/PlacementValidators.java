@@ -25,7 +25,7 @@ public interface PlacementValidators {
         var existingBlockState = context.getLevel().getBlockState(context.getClickedPos().relative(clickedFace.getOpposite()));
         return !existingBlockState.is(blockState.getBlock()) || existingBlockState.getValue(BlockStateProperties.HORIZONTAL_FACING) != clickedFace;
     };
-    PlacementValidator WATERLOGGED = hasValue(BlockStateProperties.WATERLOGGED, true);
+    PlacementValidator WATERLOGGED = fromBoolean(BlockStateProperties.WATERLOGGED);
 
     PlacementValidator ITEM_ENABLED = (context, blockState) -> context.getItemInHand().isItemEnabled(context.getLevel().enabledFeatures());
     PlacementValidator BLOCK_ENABLED = (context, blockState) -> blockState.getBlock().isEnabled(context.getLevel().enabledFeatures());
@@ -71,7 +71,10 @@ public interface PlacementValidators {
     }
 
     static <TValue extends Comparable<TValue>> PlacementValidator hasValue(Property<TValue> property, TValue value) {
-        return hasProperty(property)
-                .and((context, blockState) -> blockState.getValue(property) == value);
+        return (context, blockState) -> blockState.getValue(property) == value;
+    }
+
+    static PlacementValidator fromBoolean(Property<Boolean> property) {
+        return (context, blockState) -> blockState.getValue(property);
     }
 }
