@@ -17,11 +17,11 @@ public interface PlacementResult<TValue> {
     }
 
     default PlacementResult<TValue> asSuccess() {
-        return flatMapSuccess(PlacementResult::success);
+        return flatMapFailure(PlacementResult::success);
     }
 
     default PlacementResult<TValue> asFailure() {
-        return flatMapFailure(PlacementResult::failure);
+        return flatMapSuccess(PlacementResult::failure);
     }
 
     default void execute(Consumer<? super TValue> successAction, Consumer<? super TValue> failureAction) {
