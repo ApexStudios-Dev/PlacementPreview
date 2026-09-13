@@ -13,7 +13,7 @@ import net.minecraft.world.phys.AABB;
 final class PlaceBlockPlacementHandler implements PlacementHandler {
     @Override
     public boolean accept(GhostLevel level, BlockPlaceContext context) {
-        var contextResult = updateContext(context);
+        var contextResult = updatePlacementContext(context);
         var updatedContext = contextResult.value();
         var updatedItem = updatedContext.getItemInHand();
 
@@ -23,6 +23,10 @@ final class PlaceBlockPlacementHandler implements PlacementHandler {
 
         var blockStateResult = PlacementPreviewApiImpl.API.item2BlockSuppliers().get(updatedItem).apply(updatedContext, updatedItem.getItem());
         var blockState = blockStateResult.value();
+
+        if(blockState.isEmpty()) {
+            return false;
+        }
 
         var isPlaceable = contextResult.isSuccess() && blockStateResult.isSuccess();
 
@@ -36,7 +40,7 @@ final class PlaceBlockPlacementHandler implements PlacementHandler {
         return true;
     }
 
-    private PlacementResult<BlockPlaceContext> updateContext(BlockPlaceContext context) {
+    private PlacementResult<BlockPlaceContext> updatePlacementContext(BlockPlaceContext context) {
         if(!(context.getItemInHand().getItem() instanceof BlockItem item)) {
             return PlacementResult.success(context);
         }

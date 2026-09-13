@@ -4,6 +4,8 @@ import dev.apexstudios.placementpreview.api.PlacementPreview;
 import dev.apexstudios.placementpreview.api.PsudeoRegistry;
 import dev.apexstudios.placementpreview.api.handler.PlacementHandler;
 import dev.apexstudios.placementpreview.api.handler.RegisterPlacementHandlersEvent;
+import dev.apexstudios.placementpreview.api.handler.RegisterUseOnHandlersEvent;
+import dev.apexstudios.placementpreview.api.handler.UseOnHandler;
 import dev.apexstudios.placementpreview.api.item2block.Item2BlockSupplier;
 import dev.apexstudios.placementpreview.api.item2block.RegisterItem2BlockSuppliersEvent;
 import dev.apexstudios.placementpreview.api.provider.BlockStateProvider;
@@ -53,18 +55,25 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
             RegisterPlacementHandlersEvent::new
     );
 
+    private final PsudeoRegistryImpl.List<UseOnHandler, RegisterUseOnHandlersEvent> useOnHandlers = new PsudeoRegistryImpl.List<>(
+            UseOnHandler.class,
+            RegisterUseOnHandlersEvent::new
+    );
+
     public void register(IEventBus modBus) {
         modBus.addListener(InitializeClientRegistriesEvent.class, event -> registerAll());
 
         modBus.addListener(EventPriority.HIGH, this::registerBuiltInBlockStateProviders);
         modBus.addListener(EventPriority.HIGH, this::registerBuiltInItem2BlockSuppliers);
         modBus.addListener(EventPriority.HIGH, this::registerBuiltInPlacementHandlers);
+        modBus.addListener(EventPriority.HIGH, this::registerBuiltInUseOnHandlers);
     }
 
     public void registerAll() {
         blockStateProviders.register();
         item2BlockSuppliers.register();
         placementHandlers.register();
+        useOnHandlers.register();
     }
 
     @Override
@@ -80,6 +89,11 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
     @Override
     public PsudeoRegistry.List<PlacementHandler> placementHandlers() {
         return placementHandlers;
+    }
+
+    @Override
+    public PsudeoRegistry.List<UseOnHandler> useOnHandlers() {
+        return useOnHandlers;
     }
 
     private void registerBuiltInBlockStateProviders(RegisterBlockStateProvidersEvent event) {
@@ -2183,5 +2197,9 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
 
     private void registerBuiltInPlacementHandlers(RegisterPlacementHandlersEvent event) {
         event.register(new PlaceBlockPlacementHandler());
+    }
+
+    private void registerBuiltInUseOnHandlers(RegisterUseOnHandlersEvent event) {
+        event.register(new UseSpawnEggHandler());
     }
 }
