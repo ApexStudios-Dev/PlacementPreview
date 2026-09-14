@@ -622,6 +622,8 @@ public interface BlockStateProviders {
         BlockStateProvider DECORATED_POT = HORIZONTAL_FACING.andThen(WATERLOGGED).andThen(CRACKED_FALSE);
         BlockStateProvider CRAFTER = CRAFTER_ORIENTATION.andThen(TRIGGERED);
         BlockStateProvider MOSSY_CARPET = (context, blockState) -> PlacementResult.success(MossyCarpetBlock.getUpdatedState(blockState, context.getLevel(), context.getClickedPos(), true));
+        BlockStateProvider SKULL = ROTATION.andThen(POWERED);
+        BlockStateProvider WALL_SKULL = WALL_ATTACHMENT_ALT.andThen(POWERED);
 
         static BlockStateProvider coral(PlacementValidator validator, UnaryOperator<Block> deadBlockMapper) {
             return transforming(

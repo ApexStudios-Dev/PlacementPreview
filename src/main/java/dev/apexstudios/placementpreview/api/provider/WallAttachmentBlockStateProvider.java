@@ -35,6 +35,11 @@ public abstract class WallAttachmentBlockStateProvider implements BlockStateProv
         protected BlockState setAttachmentDirection(BlockPlaceContext context, BlockState blockState, Direction direction) {
             return blockState.setValue(BlockStateProperties.HORIZONTAL_FACING, direction.getOpposite());
         }
+
+        @Override
+        protected boolean canAttachmentSurvive(BlockPlaceContext context, BlockState blockState, Direction direction) {
+            return !context.getLevel().getBlockState(context.getClickedPos().relative(direction)).canBeReplaced(context);
+        }
     };
 
     /// Requires: [WallHangingSignBlock]
