@@ -5,11 +5,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.ClipContext;
 
-public class PlaceOnWaterHandler extends BlockItemHandler {
+public interface PlaceOnWaterHandler extends BlockItemHandler {
     @Override
-    protected PlacementResult<BlockPlaceContext> updatePlacementContext(BlockPlaceContext context) {
+    default PlacementResult<BlockPlaceContext> updatePlacementContext(BlockPlaceContext context) {
         var player = context.getPlayer();
-        var superResult = super.updatePlacementContext(context);
+        var superResult = BlockItemHandler.super.updatePlacementContext(context);
 
         if(player == null) {
             return superResult.asFailure();

@@ -64,7 +64,8 @@ public interface PlacementValidators {
 
         return ((BlockItemAccessor) item).PlacementPreview$canPlace(context, blockState);
     };
-    PlacementValidator PLACEABLE = ITEM_ENABLED.and(BLOCK_ENABLED).and(IN_BOUNDS).and(GAMEMASTER_ALLOWED).and(REPLACEABLE).and(CAN_PLACE_ITEM);
+    PlacementValidator PLACEABLE = BLOCK_ENABLED.and(IN_BOUNDS).and(GAMEMASTER_ALLOWED).and(REPLACEABLE).and(CAN_PLACE_ITEM);
+    PlacementValidator PLACEABLE_MULTI = IN_BOUNDS.and(GAMEMASTER_ALLOWED).and(REPLACEABLE);
 
     static PlacementValidator hasProperty(Property<?> property) {
         return (context, blockState) -> blockState.hasProperty(property);

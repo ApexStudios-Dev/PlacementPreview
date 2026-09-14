@@ -14,9 +14,9 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Spawner;
 import org.jspecify.annotations.Nullable;
 
-public class SpawnEggHandler implements UseOnHandler {
+public interface SpawnEggHandler extends UseOnHandler {
     @Override
-    public boolean accept(GhostLevel level, UseOnContext context) {
+    default boolean accept(GhostLevel level, UseOnContext context) {
         var stack = context.getItemInHand();
 
         if(!(stack.getItem() instanceof SpawnEggItem)) {
@@ -36,7 +36,7 @@ public class SpawnEggHandler implements UseOnHandler {
         return spawnEntity(level, context, entityType) != null;
     }
 
-    protected boolean updateSpawner(GhostLevel level, UseOnContext context, EntityType<?> entityType) {
+    default boolean updateSpawner(GhostLevel level, UseOnContext context, EntityType<?> entityType) {
         var reality = level.reality();
         var pos = context.getClickedPos();
 
@@ -52,7 +52,7 @@ public class SpawnEggHandler implements UseOnHandler {
         return true;
     }
 
-    protected <TEntity extends Entity> @Nullable TEntity spawnEntity(GhostLevel level, UseOnContext context, EntityType<TEntity> entityType) {
+    default <TEntity extends Entity> @Nullable TEntity spawnEntity(GhostLevel level, UseOnContext context, EntityType<TEntity> entityType) {
         var reality = level.reality();
         var pos = context.getClickedPos();
 

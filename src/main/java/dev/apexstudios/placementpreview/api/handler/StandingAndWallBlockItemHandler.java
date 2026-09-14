@@ -8,9 +8,9 @@ import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class StandingAndWallBlockItemHandler extends BlockItemHandler {
+public interface StandingAndWallBlockItemHandler extends BlockItemHandler {
     @Override
-    protected PlacementResult<BlockState> apply(BlockPlaceContext context, BlockItem item) {
+    default PlacementResult<BlockState> apply(BlockPlaceContext context, BlockItem item) {
         var standingAndWallItem = (StandingAndWallBlockItem) item;
         var attachmentDirectionOpposite = standingAndWallItem.attachmentDirection.getOpposite();
         var standingBlock = standingAndWallItem.getBlock();
@@ -30,7 +30,7 @@ public class StandingAndWallBlockItemHandler extends BlockItemHandler {
         return PlacementResult.failure(standingBlock.defaultBlockState());
     }
 
-    protected boolean canPlace(BlockPlaceContext context, BlockState blockState, StandingAndWallBlockItem item) {
+    default boolean canPlace(BlockPlaceContext context, BlockState blockState, StandingAndWallBlockItem item) {
         return ((StandingAndWallBlockItemAccessor) item).PlacementPreview$canPlace(context.getLevel(), blockState, context.getClickedPos());
     }
 }

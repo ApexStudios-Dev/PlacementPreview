@@ -17,14 +17,14 @@ public final class PlacementPreviewMod {
         GhostRenderer.registerEvents(PlacementPreview.ID, (level, player, hitResult) -> {
             // TODO: REMOVE ME BEFORE PUBLISHING!!!!!!!!!!!!!!!1
             ((PlacementPreviewApiImpl) PlacementPreviewApiImpl.API).registerAll();
-            var reality = level.reality();
+            var ghosted = level.ghosted();
 
             for(var hand : InteractionHand.values()) {
                 var stack = player.getItemInHand(hand);
                 var item = stack.getItem();
                 var handler = PlacementPreview.API.useOnHandlers().get(item);
 
-                if(handler != null && handler.accept(level, new UseOnContext(reality, player, hand, stack, hitResult))) {
+                if(handler != null && handler.accept(level, new UseOnContext(ghosted, player, hand, stack, hitResult))) {
                     return true;
                 }
             }

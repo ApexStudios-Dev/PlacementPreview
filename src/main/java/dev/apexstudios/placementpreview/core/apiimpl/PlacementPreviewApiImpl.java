@@ -2,6 +2,7 @@ package dev.apexstudios.placementpreview.core.apiimpl;
 
 import dev.apexstudios.placementpreview.api.PlacementPreview;
 import dev.apexstudios.placementpreview.api.PsudeoRegistry;
+import dev.apexstudios.placementpreview.api.handler.MultiBlockItemHandler;
 import dev.apexstudios.placementpreview.api.handler.RegisterUseOnHandlersEvent;
 import dev.apexstudios.placementpreview.api.handler.UseOnHandler;
 import dev.apexstudios.placementpreview.api.provider.BlockStateProvider;
@@ -14,7 +15,9 @@ import net.minecraft.SharedConstants;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.BedItem;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SpawnEggItem;
@@ -962,18 +965,20 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
     private void registerBuiltInUseOnHandlers(RegisterUseOnHandlersEvent event) {
         var needsPlacingOnWater = isItem(Items.LILY_PAD, Items.FROGSPAWN);
         var isStandingWall = isItemType(StandingAndWallBlockItem.class).and(needsPlacingOnWater.negate());
+        var isDoubleHigh = isItemType(DoubleHighBlockItem.class);
+        var isBed = isItemType(BedItem.class);
 
-        registerForEachVanilla(
-                BuiltInRegistries.ITEM,
-                isItemType(BlockItem.class)
-                        .and(needsPlacingOnWater.negate())
-                        .and(isStandingWall.negate()),
-                event,
-                UseOnHandler.BLOCK_ITEM
-        );
+        var isBlockItem = isItemType(BlockItem.class)
+                .and(needsPlacingOnWater.negate())
+                .and(isStandingWall.negate())
+                .and(isBed.negate())
+                .and(isDoubleHigh.negate());
 
+        registerForEachVanilla(BuiltInRegistries.ITEM, isBlockItem, event, UseOnHandler.BLOCK_ITEM);
         registerForEachVanilla(BuiltInRegistries.ITEM, isStandingWall, event, UseOnHandler.STANDING_WALL);
         registerForEachVanilla(BuiltInRegistries.ITEM, needsPlacingOnWater, event, UseOnHandler.PLACE_ON_WATER);
+        registerForEachVanilla(BuiltInRegistries.ITEM, isDoubleHigh, event, MultiBlockItemHandler.DOUBLE_HIGH);
+        registerForEachVanilla(BuiltInRegistries.ITEM, isBed, event, MultiBlockItemHandler.BED);
         registerForEachVanilla(BuiltInRegistries.ITEM, isItemType(SpawnEggItem.class), event, UseOnHandler.SPAWN_EGG);
 
         // TODO: handlers for the following items
