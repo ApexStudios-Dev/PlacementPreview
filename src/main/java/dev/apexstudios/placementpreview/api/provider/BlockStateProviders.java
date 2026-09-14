@@ -20,8 +20,8 @@ import dev.apexstudios.placementpreview.mixin.GrowingPlantBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.NoteBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.PistonBaseBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.PoweredRailBlockAccessor;
-import dev.apexstudios.placementpreview.mixin.RedStoneTorchBlockAccessor;
-import dev.apexstudios.placementpreview.mixin.RedStoneWireBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.RedstoneTorchBlockAccessor;
+import dev.apexstudios.placementpreview.mixin.RedstoneWireBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.ScaffoldingBlockAccessor;
 import dev.apexstudios.placementpreview.mixin.SpeleothemBlockAccessor;
 import java.util.function.BiFunction;
@@ -61,8 +61,8 @@ import net.minecraft.world.level.block.NoteBlock;
 import net.minecraft.world.level.block.PotentSulfurBlock;
 import net.minecraft.world.level.block.PoweredRailBlock;
 import net.minecraft.world.level.block.RailState;
-import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.RedstoneTorchBlock;
+import net.minecraft.world.level.block.RedstoneWireBlock;
 import net.minecraft.world.level.block.ScaffoldingBlock;
 import net.minecraft.world.level.block.SeaPickleBlock;
 import net.minecraft.world.level.block.SegmentableBlock;
@@ -156,8 +156,8 @@ public interface BlockStateProviders {
                 .setValue(BlockStateProperties.CHEST_TYPE, type)
         );
     };
-    /// Requires: [RedStoneWireBlock]
-    BlockStateProvider REDSTONE_WIRE_CONNECTIONS = (context, blockState) -> PlacementResult.success(((RedStoneWireBlockAccessor) blockState.getBlock()).PlacementPreview$getConnectionState(context.getLevel(), blockState, context.getClickedPos()));
+    /// Requires: [RedstoneWireBlock]
+    BlockStateProvider REDSTONE_WIRE_CONNECTIONS = (context, blockState) -> PlacementResult.success(((RedstoneWireBlockAccessor) blockState.getBlock()).PlacementPreview$getConnectionState(context.getLevel(), blockState, context.getClickedPos()));
     BlockStateProvider INVALID_TO_DIRT = transforming(PlacementValidators.CAN_SURVIVE, itemTransformer(Items.DIRT));
     BlockStateProvider ROTATION = property(BlockStateProperties.ROTATION_16, (context, blockState, current) -> PlacementResult.success(RotationSegment.convertToSegment(context.getRotation())));
     BlockStateProvider ROTATION_ALT = property(BlockStateProperties.ROTATION_16, (context, blockState, current) -> PlacementResult.success(RotationSegment.convertToSegment(context.getRotation() + 180F)));
@@ -195,7 +195,7 @@ public interface BlockStateProviders {
         );
     };
     /// Requires: [RedstoneTorchBlock]
-    BlockStateProvider REDSTONE_TORCH_LIT = property(BlockStateProperties.LIT, (context, blockState, current) -> PlacementResult.success(!((RedStoneTorchBlockAccessor) blockState.getBlock()).PlacementPreview$hasNeighborSignal(context.getLevel(), context.getClickedPos(), blockState)));
+    BlockStateProvider REDSTONE_TORCH_LIT = property(BlockStateProperties.LIT, (context, blockState, current) -> PlacementResult.success(!((RedstoneTorchBlockAccessor) blockState.getBlock()).PlacementPreview$hasNeighborSignal(context.getLevel(), context.getClickedPos(), blockState)));
     BlockStateProvider SNOW_LAYERS = ifTrue(
             PlacementValidators.SAME_BLOCK,
             property(BlockStateProperties.LAYERS, (context, blockState, current) -> {
@@ -283,14 +283,14 @@ public interface BlockStateProviders {
     BlockStateProvider ENABLED_FALSE = forced(BlockStateProperties.ENABLED, false);
     /// Requires: [DiodeBlock]
     BlockStateProvider DIODE_COMPARATOR = property(BlockStateProperties.POWERED, (context, blockState, current) -> PlacementResult.success(((DiodeBlockAccessor) blockState.getBlock()).PlacementPreview$shouldTurnOn(context.getLevel(), context.getClickedPos(), blockState)));
-    /// Requires: [RedStoneWireBlock]
+    /// Requires: [RedstoneWireBlock]
     BlockStateProvider REDSTONE_WIRE_POWER = property(BlockStateProperties.POWER, (context, blockState, current) -> {
         // experimental redstone while looks more complicated
         // this mostly to gather up all the neighbor signals
         // everything comes down to getting the block and incoming wire signal
         // and using the Math.max() of the 2 values
         // which is what the default evaluator does
-        return PlacementResult.success(((DefaultRedstoneWireEvaluatorAccessor) ((RedStoneWireBlock) blockState.getBlock()).evaluator).PlacementPreview$calculateTargetStrength(context.getLevel(), context.getClickedPos()));
+        return PlacementResult.success(((DefaultRedstoneWireEvaluatorAccessor) ((RedstoneWireBlock) blockState.getBlock()).evaluator).PlacementPreview$calculateTargetStrength(context.getLevel(), context.getClickedPos()));
     });
     BlockStateProvider END_ROD_FACING = property(BlockStateProperties.FACING, (context, blockState, current) -> {
         var clickedFace = context.getClickedFace();

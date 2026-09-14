@@ -15,13 +15,13 @@ import net.minecraft.SharedConstants;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.item.BedItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.StandingAndWallBlockItem;
+import net.minecraft.world.level.block.AbstractBedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.EventPriority;
@@ -967,7 +967,7 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         var isPiston = isItem(Items.PISTON, Items.STICKY_PISTON);
         var isStandingWall = isItemType(StandingAndWallBlockItem.class);
         var isDoubleHigh = isItemType(DoubleHighBlockItem.class);
-        var isBed = isItemType(BedItem.class);
+        var isBed = isBlockItemWithBlock(AbstractBedBlock.class::isInstance);
 
         var isBlockItem = isItemType(BlockItem.class)
                 .and(needsPlacingOnWater.negate())
@@ -1048,6 +1048,10 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
 
             return false;
         };
+    }
+
+    private Predicate<Item> isBlockItemWithBlock(Predicate<Block> test) {
+        return item -> item instanceof BlockItem blockItem && test.test(blockItem.getBlock());
     }
 
     private boolean isVanilla(Identifier registryName) {

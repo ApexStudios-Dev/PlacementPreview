@@ -19,9 +19,9 @@ pluginManagement {
 
 dependencyResolutionManagement {
     versionCatalogs.create("libs") {
-        version("neoforge", "26.2.0.0-beta")
+        version("neoforge", "26.3.0-alpha.0+rc-3.20260914.185244")
 
-        library("ghostrenderer", "dev.apexstudios", "ghostrenderer").version("26.2.5-beta-pr-1")
+        library("ghostrenderer", "dev.apexstudios", "ghostrenderer").version("26.3.0-beta-pr-2")
     }
 }
 
