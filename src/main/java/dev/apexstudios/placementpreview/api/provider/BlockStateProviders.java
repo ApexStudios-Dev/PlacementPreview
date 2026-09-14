@@ -405,7 +405,7 @@ public interface BlockStateProviders {
     }
 
     static BlockStateProvider itemTransformer(Item item) {
-        return (context, blockState) -> PlacementPreview.API.item2BlockSuppliers().get(item).apply(context, item);
+        return toBlockTransformer((context, blockState) -> Block.byItem(item));
     }
 
     static BlockStateProvider blockTransformer(Block block) {

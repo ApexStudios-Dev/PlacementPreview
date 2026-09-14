@@ -1,7 +1,6 @@
-package dev.apexstudios.placementpreview.core.apiimpl;
+package dev.apexstudios.placementpreview.api.handler;
 
 import dev.apexstudios.ghostrenderer.api.GhostLevel;
-import dev.apexstudios.placementpreview.api.handler.UseOnHandler;
 import java.util.Objects;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -13,15 +12,12 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Spawner;
+import org.jspecify.annotations.Nullable;
 
-final class UseSpawnEggHandler implements UseOnHandler {
+public class SpawnEggHandler implements UseOnHandler {
     @Override
     public boolean accept(GhostLevel level, UseOnContext context) {
         var stack = context.getItemInHand();
-
-        if(stack.isEmpty()) {
-            return false;
-        }
 
         if(!(stack.getItem() instanceof SpawnEggItem)) {
             return false;
@@ -37,10 +33,10 @@ final class UseSpawnEggHandler implements UseOnHandler {
             return true;
         }
 
-        return spawnEntity(level, context, entityType);
+        return spawnEntity(level, context, entityType) != null;
     }
 
-    private boolean updateSpawner(GhostLevel level, UseOnContext context, EntityType<?> entityType) {
+    protected boolean updateSpawner(GhostLevel level, UseOnContext context, EntityType<?> entityType) {
         var reality = level.reality();
         var pos = context.getClickedPos();
 
@@ -56,7 +52,7 @@ final class UseSpawnEggHandler implements UseOnHandler {
         return true;
     }
 
-    private boolean spawnEntity(GhostLevel level, UseOnContext context, EntityType<?> entityType) {
+    protected <TEntity extends Entity> @Nullable TEntity spawnEntity(GhostLevel level, UseOnContext context, EntityType<TEntity> entityType) {
         var reality = level.reality();
         var pos = context.getClickedPos();
 
@@ -64,7 +60,7 @@ final class UseSpawnEggHandler implements UseOnHandler {
         var entity = entityType.create(reality, new EntitySpawnRequest(EntitySpawnReason.SPAWN_ITEM_USE, true));
 
         if(entity == null) {
-            return false;
+            return null;
         }
 
         level.fixClientEntity(entity);
@@ -105,10 +101,6 @@ final class UseSpawnEggHandler implements UseOnHandler {
 
         EntityType.createDefaultStackConfig(reality, context.getItemInHand(), context.getPlayer()).apply(entity);
         level.addEntity(entity, canSpawn);
-        return true;
-    }
-
-    private void fixUpClientEntity(Entity entity) {
-
+        return entity;
     }
 }

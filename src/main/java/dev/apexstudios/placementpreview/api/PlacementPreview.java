@@ -1,8 +1,6 @@
 package dev.apexstudios.placementpreview.api;
 
-import dev.apexstudios.placementpreview.api.handler.PlacementHandler;
 import dev.apexstudios.placementpreview.api.handler.UseOnHandler;
-import dev.apexstudios.placementpreview.api.item2block.Item2BlockSupplier;
 import dev.apexstudios.placementpreview.api.provider.BlockStateProvider;
 import java.util.ServiceLoader;
 import net.minecraft.resources.Identifier;
@@ -26,9 +24,5 @@ public interface PlacementPreview {
 
     PsudeoRegistry.Keyed.Defaulted<Block, BlockStateProvider> blockStateProviders();
 
-    PsudeoRegistry.Keyed.Defaulted<Item, Item2BlockSupplier> item2BlockSuppliers();
-
-    PsudeoRegistry.List<PlacementHandler> placementHandlers();
-
-    PsudeoRegistry.List<UseOnHandler> useOnHandlers();
+    PsudeoRegistry.Keyed.NoDefault<Item, UseOnHandler> useOnHandlers();
 }
