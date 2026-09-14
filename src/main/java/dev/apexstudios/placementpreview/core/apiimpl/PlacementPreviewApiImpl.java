@@ -2201,5 +2201,40 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
 
     private void registerBuiltInUseOnHandlers(RegisterUseOnHandlersEvent event) {
         event.register(new UseSpawnEggHandler());
+
+        // TODO: handlers for the following items
+        // Overriders of `Item.useOn`
+        //  ArmorStandItem
+        //  AxeItem
+        //  BoneMealItem
+        //  DebugStickItem
+        //  EndCrystalItem
+        //  EnderEyeItem*
+        //  FireChargeItem
+        //  FireworkRocketItem*
+        //  FlintAndSteelItem
+        //  HangingEntityItem
+        //  HoeItem
+        //  HoneycombItem
+        //  LeadITem
+        //  MapItem
+        //  MinecartItem
+        //  PotionItem
+        //  ShearsItem
+        //  ShovelItem
+        //  SolidBucketItem
+        // Overriders of `Item.use`
+        //  BoatItem
+        //  BucketItem
+        //  EggItem*
+        //  EnderEyeItem*
+        //  EnderpearlItem*
+        //  ExperienceBottleItem*
+        //  LingeringPotionItem*
+        //  SnowballItem*
+        //  SplashPotionItem*
+        //  ThrowablePotionItem*
+        //  WindChargeItem*
+        // * - questionable, summons projectile entity at players eyes
     }
 }
