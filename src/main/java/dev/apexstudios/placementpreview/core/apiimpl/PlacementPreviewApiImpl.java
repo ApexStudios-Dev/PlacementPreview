@@ -964,7 +964,8 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
 
     private void registerBuiltInUseOnHandlers(RegisterUseOnHandlersEvent event) {
         var needsPlacingOnWater = isItem(Items.LILY_PAD, Items.FROGSPAWN);
-        var isStandingWall = isItemType(StandingAndWallBlockItem.class).and(needsPlacingOnWater.negate());
+        var isPiston = isItem(Items.PISTON, Items.STICKY_PISTON);
+        var isStandingWall = isItemType(StandingAndWallBlockItem.class);
         var isDoubleHigh = isItemType(DoubleHighBlockItem.class);
         var isBed = isItemType(BedItem.class);
 
@@ -972,13 +973,15 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
                 .and(needsPlacingOnWater.negate())
                 .and(isStandingWall.negate())
                 .and(isBed.negate())
-                .and(isDoubleHigh.negate());
+                .and(isDoubleHigh.negate())
+                .and(isPiston.negate());
 
         registerForEachVanilla(BuiltInRegistries.ITEM, isBlockItem, event, UseOnHandler.BLOCK_ITEM);
         registerForEachVanilla(BuiltInRegistries.ITEM, isStandingWall, event, UseOnHandler.STANDING_WALL);
         registerForEachVanilla(BuiltInRegistries.ITEM, needsPlacingOnWater, event, UseOnHandler.PLACE_ON_WATER);
         registerForEachVanilla(BuiltInRegistries.ITEM, isDoubleHigh, event, MultiBlockItemHandler.DOUBLE_HIGH);
         registerForEachVanilla(BuiltInRegistries.ITEM, isBed, event, MultiBlockItemHandler.BED);
+        registerForEachVanilla(BuiltInRegistries.ITEM, isPiston, event, MultiBlockItemHandler.PISTON);
         registerForEachVanilla(BuiltInRegistries.ITEM, isItemType(SpawnEggItem.class), event, UseOnHandler.SPAWN_EGG);
 
         // TODO: handlers for the following items

@@ -1,6 +1,7 @@
 package dev.apexstudios.placementpreview.api.handler;
 
 import dev.apexstudios.ghostrenderer.api.GhostLevel;
+import dev.apexstudios.placementpreview.api.BlockStateHelper;
 import dev.apexstudios.placementpreview.api.validator.PlacementValidators;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -10,10 +11,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.PistonType;
 import net.minecraft.world.level.block.state.properties.Property;
 
 // TODO: Render block outlines for invalid mutli block placements?
@@ -34,7 +37,38 @@ public interface MultiBlockItemHandler extends BlockItemHandler {
             (pos, blockState) -> pos.relative(BedBlock.getConnectedDirection(blockState))
     );
 
+    UseOnHandler PISTON = new MultiBlockItemHandler() {
+        @Override
+        public void setAdditionalBlocks(GhostLevel level, BlockPlaceContext context, BlockState blockState, boolean success) {
+            if(!blockState.getValue(BlockStateProperties.EXTENDED)) {
+                return;
+            }
+
+            var facing = blockState.getValue(BlockStateProperties.FACING);
+            var headBlockState = BlockStateHelper.copyFrom(blockState, BlockStateHelper.getDefaultBlockState(context.getItemInHand(), Blocks.PISTON_HEAD))
+                    .setValue(BlockStateProperties.PISTON_TYPE, blockState.is(Blocks.STICKY_PISTON) ? PistonType.STICKY : PistonType.DEFAULT);
+
+            setMultiBlock(level, context, context.getClickedPos().relative(facing), headBlockState, success);
+        }
+    };
+
     void setAdditionalBlocks(GhostLevel level, BlockPlaceContext context, BlockState blockState, boolean success);
+
+    default void setMultiBlock(GhostLevel level, BlockPlaceContext context, BlockPos pos, BlockState blockState, boolean success) {
+        // TODO: whole block vs multi block validation should be a ghost property
+        var isPlaceable = success;
+
+        if(isPlaceable) {
+            isPlaceable = PlacementValidators.PLACEABLE_MULTI.test(new BlockPlaceContext(context) {
+                @Override
+                public BlockPos getClickedPos() {
+                    return pos;
+                }
+            }, blockState);
+        }
+
+        setBlock(level, context, pos, blockState, isPlaceable);
+    }
 
     @Override
     default boolean accept(GhostLevel level, BlockPlaceContext context, BlockItem item, boolean initialSuccess) {
@@ -50,24 +84,7 @@ public interface MultiBlockItemHandler extends BlockItemHandler {
         return new MultiBlockItemHandler() {
             @Override
             public void setAdditionalBlocks(GhostLevel level, BlockPlaceContext context, BlockState blockState, boolean success) {
-                var value = blockState.getValue(property);
-
-                var otherContext = new BlockPlaceContext(context) {
-                    @Override
-                    public BlockPos getClickedPos() {
-                        return offsetPosMapper.apply(context.getClickedPos(), blockState);
-                    }
-                };
-
-                // TODO: whole block vs multi block validation should be a ghost property
-                var isPlaceable = success;
-                var otherBlockState = blockState.setValue(property, otherValuerMapper.apply(value));
-
-                if(isPlaceable) {
-                    isPlaceable = PlacementValidators.PLACEABLE_MULTI.test(otherContext, otherBlockState);
-                }
-
-                setBlock(level, otherContext, otherContext.getClickedPos(), otherBlockState, isPlaceable);
+                setMultiBlock(level, context, offsetPosMapper.apply(context.getClickedPos(), blockState), blockState.setValue(property, otherValuerMapper.apply(blockState.getValue(property))), success);
             }
         };
     }
