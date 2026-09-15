@@ -10,7 +10,7 @@ pluginManagement {
         resolutionStrategy {
             eachPlugin {
                 if(requested.id.namespace == "apex-conventions") {
-                    useVersion("0.1.101")
+                    useVersion("0.1.102")
                 }
             }
         }
@@ -19,7 +19,7 @@ pluginManagement {
 
 dependencyResolutionManagement {
     versionCatalogs.create("libs") {
-        version("neoforge", "26.3.0-alpha.0+rc-3.20260914.185244")
+        version("neoforge", "26.3.0.0-beta")
 
         library("ghostrenderer", "dev.apexstudios", "ghostrenderer").version("26.3.2-beta-pr-2")
     }
