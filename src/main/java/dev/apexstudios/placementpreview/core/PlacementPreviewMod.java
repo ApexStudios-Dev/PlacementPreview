@@ -30,6 +30,6 @@ public final class PlacementPreviewMod {
             }
 
             return false;
-        });
+        }, PlacementPreview.GHOST_PROPERTIES);
     }
 }
