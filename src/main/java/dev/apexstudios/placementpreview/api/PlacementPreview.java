@@ -1,5 +1,6 @@
 package dev.apexstudios.placementpreview.api;
 
+import dev.apexstudios.ghostrenderer.api.GhostProperties;
 import dev.apexstudios.placementpreview.api.handler.UseOnHandler;
 import dev.apexstudios.placementpreview.api.provider.BlockStateProvider;
 import java.util.ServiceLoader;
@@ -13,6 +14,8 @@ public interface PlacementPreview {
     PlacementPreview API = ServiceLoader.load(PlacementPreview.class, PlacementPreview.class.getClassLoader())
             .findFirst()
             .orElseThrow(() -> new NullPointerException("Failed to load PlacementPreview Api"));
+
+    GhostProperties GHOST_PROPERTIES = new GhostProperties() {};
 
     static Identifier identifier(String identifier) {
         return Identifier.fromNamespaceAndPath(ID, identifier);

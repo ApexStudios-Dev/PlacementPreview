@@ -9,14 +9,14 @@ neoForge.version = libs.versions.neoforge.get()
 
 repositories {
     mavenLocal()
-    /*maven("https://prmaven.neoforged.net/NeoForge/pr3198") {
+    /*maven("https://prmaven.neoforged.net/NeoForge/pr3403") {
         content {
             includeModule("net.neoforged", "neoforge")
             includeModule("net.neoforged", "testframework")
         }
     }*/
 
-    maven("https://maven.apexmodder.com/prs/GhostRenderer/pr1") {
+    maven("https://maven.apexmodder.com/prs/GhostRenderer/pr2") {
         content {
             includeModule("dev.apexstudios", "ghostrenderer")
         }
