@@ -4,9 +4,12 @@ import dev.apexstudios.ghostrenderer.api.GhostProperties;
 import dev.apexstudios.placementpreview.api.handler.UseOnHandler;
 import dev.apexstudios.placementpreview.api.provider.BlockStateProvider;
 import java.util.ServiceLoader;
+import net.minecraft.core.Holder;
+import net.minecraft.core.TypedInstance;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import org.jspecify.annotations.Nullable;
 
 public interface PlacementPreview {
     String ID = "placementpreview";
@@ -25,7 +28,23 @@ public interface PlacementPreview {
         return ID + Identifier.NAMESPACE_SEPARATOR + identifier;
     }
 
-    PsudeoRegistry.Keyed.Defaulted<Block, BlockStateProvider> blockStateProviders();
+    BlockStateProvider getBlockStateProvider(Block block);
 
-    PsudeoRegistry.Keyed.NoDefault<Item, UseOnHandler> useOnHandlers();
+    default BlockStateProvider getBlockStateProvider(Holder<Block> holder) {
+        return getBlockStateProvider(holder.value());
+    }
+
+    default BlockStateProvider getBlockStateProvider(TypedInstance<Block> instance) {
+        return getBlockStateProvider(instance.typeHolder());
+    }
+
+    @Nullable UseOnHandler getUseOnHandler(Item item);
+
+    default @Nullable UseOnHandler getUseOnHandler(Holder<Item> holder) {
+        return getUseOnHandler(holder.value());
+    }
+
+    default @Nullable UseOnHandler getUseOnHandler(TypedInstance<Item> instance) {
+        return getUseOnHandler(instance.typeHolder());
+    }
 }

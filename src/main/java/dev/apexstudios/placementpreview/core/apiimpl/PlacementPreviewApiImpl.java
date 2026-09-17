@@ -1,7 +1,6 @@
 package dev.apexstudios.placementpreview.core.apiimpl;
 
 import dev.apexstudios.placementpreview.api.PlacementPreview;
-import dev.apexstudios.placementpreview.api.PsudeoRegistry;
 import dev.apexstudios.placementpreview.api.handler.MultiBlockItemHandler;
 import dev.apexstudios.placementpreview.api.handler.RegisterUseOnHandlersEvent;
 import dev.apexstudios.placementpreview.api.handler.UseOnHandler;
@@ -10,6 +9,9 @@ import dev.apexstudios.placementpreview.api.provider.BlockStateProviders;
 import dev.apexstudios.placementpreview.api.provider.ConnectionBlockStateProvider;
 import dev.apexstudios.placementpreview.api.provider.RegisterBlockStateProvidersEvent;
 import dev.apexstudios.placementpreview.api.provider.WallAttachmentBlockStateProvider;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.Registry;
@@ -54,7 +56,9 @@ import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.WallSkullBlock;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModLoader;
 import net.neoforged.neoforge.client.event.InitializeClientRegistriesEvent;
+import org.jspecify.annotations.Nullable;
 
 @SuppressWarnings("deprecation")
 public final class PlacementPreviewApiImpl implements PlacementPreview {
@@ -65,19 +69,8 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
     // while this may work for most blocks it is still highly recommended to register a provider for your block
     // see 'registerBuiltInBlockStateProviders' below for vanilla registrations
     private final BlockStateProvider fallbackBlockStateProvider = disableFallbackProvider ? BlockStateProvider.SUCCESS : BlockStateProvider.fromVanilla((context, blockState) -> blockState.getBlock().getStateForPlacement(context));
-
-    private final PsudeoRegistryImpl.Keyed.Defaulted<Block, BlockStateProvider, RegisterBlockStateProvidersEvent> blockStateProviders = new PsudeoRegistryImpl.Keyed.Defaulted<>(
-            RegisterBlockStateProvidersEvent::new,
-            Block::builtInRegistryHolder,
-            "BlockStateProvider",
-            fallbackBlockStateProvider
-    );
-
-    private final PsudeoRegistryImpl.Keyed.NoDefault<Item, UseOnHandler, RegisterUseOnHandlersEvent> useOnHandlers = new PsudeoRegistryImpl.Keyed.NoDefault<>(
-            RegisterUseOnHandlersEvent::new,
-            Item::builtInRegistryHolder,
-            "UseOnHandler"
-    );
+    private final Map<Block, BlockStateProvider> blockStateProviders = new IdentityHashMap<>();
+    private final Map<Item, UseOnHandler> useOnHandlers = new IdentityHashMap<>();
 
     public void register(IEventBus modBus) {
         modBus.addListener(InitializeClientRegistriesEvent.class, event -> registerAll());
@@ -87,18 +80,30 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
     }
 
     public void registerAll() {
-        blockStateProviders.register();
-        useOnHandlers.register();
+        blockStateProviders.clear();
+        useOnHandlers.clear();
+
+        ModLoader.postEvent(new RegisterBlockStateProvidersEvent((block, provider) -> {
+            if(blockStateProviders.putIfAbsent(block, provider) != null) {
+                throw new IllegalArgumentException("Duplicate BlockStateProvider registration: " + block.builtInRegistryHolder().key().identifier());
+            }
+        }));
+
+        ModLoader.postEvent(new RegisterUseOnHandlersEvent((item, handler) -> {
+            if(useOnHandlers.putIfAbsent(item, handler) != null) {
+                throw new IllegalArgumentException("Duplicate UseOnHandler registration: " + item.builtInRegistryHolder().key().identifier());
+            }
+        }));
     }
 
     @Override
-    public PsudeoRegistry.Keyed.Defaulted<Block, BlockStateProvider> blockStateProviders() {
-        return blockStateProviders;
+    public BlockStateProvider getBlockStateProvider(Block block) {
+        return blockStateProviders.getOrDefault(block, fallbackBlockStateProvider);
     }
 
     @Override
-    public PsudeoRegistry.Keyed.NoDefault<Item, UseOnHandler> useOnHandlers() {
-        return useOnHandlers;
+    public @Nullable UseOnHandler getUseOnHandler(Item item) {
+        return useOnHandlers.get(item);
     }
 
     private void registerBuiltInBlockStateProviders(RegisterBlockStateProvidersEvent event) {
@@ -302,42 +307,42 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         Predicate<Block> isWallCoralFan = BaseCoralWallFanBlock.class::isInstance;
         Predicate<Block> isDeadWallCoralFan = CoralWallFanBlock.class::isInstance;
 
-        registerForEachVanilla(BuiltInRegistries.BLOCK, SlabBlock.class::isInstance, event, BlockStateProviders.Blocks.SLAB);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, StairBlock.class::isInstance, event, BlockStateProviders.Blocks.STAIR);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, DoorBlock.class::isInstance, event, BlockStateProviders.Blocks.DOOR);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, SkullBlock.class::isInstance, event, BlockStateProviders.Blocks.SKULL);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, WallSkullBlock.class::isInstance, event, BlockStateProviders.Blocks.WALL_SKULL);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, AnvilBlock.class::isInstance, event, BlockStateProviders.HORIZONTAL_FACING_CLOCKWISE);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, SlabBlock.class::isInstance, event::register, BlockStateProviders.Blocks.SLAB);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, StairBlock.class::isInstance, event::register, BlockStateProviders.Blocks.STAIR);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, DoorBlock.class::isInstance, event::register, BlockStateProviders.Blocks.DOOR);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, SkullBlock.class::isInstance, event::register, BlockStateProviders.Blocks.SKULL);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, WallSkullBlock.class::isInstance, event::register, BlockStateProviders.Blocks.WALL_SKULL);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, AnvilBlock.class::isInstance, event::register, BlockStateProviders.HORIZONTAL_FACING_CLOCKWISE);
 
         registerForEachVanilla(
                 BuiltInRegistries.BLOCK,
                 isChest.and(isCopperChest.negate())
                         .and(block -> block != Blocks.ENDER_CHEST),
-                event,
+                event::register,
                 BlockStateProviders.Blocks.CHEST
         );
 
-        registerForEachVanilla(BuiltInRegistries.BLOCK, isCopperChest, event, BlockStateProviders.Blocks.COPPER_CHEST);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, ButtonBlock.class::isInstance, event, WallAttachmentBlockStateProvider.FACING_HORIZONTAL);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, FenceGateBlock.class::isInstance, event, BlockStateProviders.Blocks.FENCE_GATE);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, FenceBlock.class::isInstance, event, BlockStateProviders.Blocks.FENCE);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, TrapDoorBlock.class::isInstance, event, BlockStateProviders.Blocks.TRAPDOOR);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, WallBlock.class::isInstance, event, BlockStateProviders.Blocks.WALL);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, StandingSignBlock.class::isInstance, event, BlockStateProviders.Blocks.STANDING_SIGN);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, WallSignBlock.class::isInstance, event, BlockStateProviders.Blocks.WALL_SIGN);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, CeilingHangingSignBlock.class::isInstance, event, BlockStateProviders.Blocks.HANGING_SIGN);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, WallHangingSignBlock.class::isInstance, event, BlockStateProviders.Blocks.WALL_HANGING_SIGN);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, LeavesBlock.class::isInstance, event, BlockStateProviders.Blocks.LEAVES);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, SpeleothemBlock.class::isInstance, event, BlockStateProviders.Blocks.SPELEOTHEM_BLOCK);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, AmethystClusterBlock.class::isInstance, event, BlockStateProviders.Blocks.AMETHYST_CLUSTER);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, CandleBlock.class::isInstance, event, BlockStateProviders.Blocks.CANDLE);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, CampfireBlock.class::isInstance, event, BlockStateProviders.Blocks.CAMPFIRE);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, LanternBlock.class::isInstance, event, BlockStateProviders.Blocks.LANTERN);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, CoralBlock.class::isInstance, event, BlockStateProviders.Blocks.CORAL);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, CoralPlantBlock.class::isInstance, event, BlockStateProviders.Blocks.CORAL_PLANT);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, isCoralFan.and(isWallCoralFan.negate()), event, BlockStateProviders.Blocks.CORAL_FAN);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, isWallCoralFan, event, BlockStateProviders.Blocks.DEAD_WALL_CORAL_FAN);
-        registerForEachVanilla(BuiltInRegistries.BLOCK, isDeadWallCoralFan.and(isWallCoralFan.negate()), event, BlockStateProviders.Blocks.WALL_CORAL_FAN);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, isCopperChest, event::register, BlockStateProviders.Blocks.COPPER_CHEST);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, ButtonBlock.class::isInstance, event::register, WallAttachmentBlockStateProvider.FACING_HORIZONTAL);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, FenceGateBlock.class::isInstance, event::register, BlockStateProviders.Blocks.FENCE_GATE);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, FenceBlock.class::isInstance, event::register, BlockStateProviders.Blocks.FENCE);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, TrapDoorBlock.class::isInstance, event::register, BlockStateProviders.Blocks.TRAPDOOR);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, WallBlock.class::isInstance, event::register, BlockStateProviders.Blocks.WALL);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, StandingSignBlock.class::isInstance, event::register, BlockStateProviders.Blocks.STANDING_SIGN);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, WallSignBlock.class::isInstance, event::register, BlockStateProviders.Blocks.WALL_SIGN);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, CeilingHangingSignBlock.class::isInstance, event::register, BlockStateProviders.Blocks.HANGING_SIGN);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, WallHangingSignBlock.class::isInstance, event::register, BlockStateProviders.Blocks.WALL_HANGING_SIGN);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, LeavesBlock.class::isInstance, event::register, BlockStateProviders.Blocks.LEAVES);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, SpeleothemBlock.class::isInstance, event::register, BlockStateProviders.Blocks.SPELEOTHEM_BLOCK);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, AmethystClusterBlock.class::isInstance, event::register, BlockStateProviders.Blocks.AMETHYST_CLUSTER);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, CandleBlock.class::isInstance, event::register, BlockStateProviders.Blocks.CANDLE);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, CampfireBlock.class::isInstance, event::register, BlockStateProviders.Blocks.CAMPFIRE);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, LanternBlock.class::isInstance, event::register, BlockStateProviders.Blocks.LANTERN);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, CoralBlock.class::isInstance, event::register, BlockStateProviders.Blocks.CORAL);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, CoralPlantBlock.class::isInstance, event::register, BlockStateProviders.Blocks.CORAL_PLANT);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, isCoralFan.and(isWallCoralFan.negate()), event::register, BlockStateProviders.Blocks.CORAL_FAN);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, isWallCoralFan, event::register, BlockStateProviders.Blocks.DEAD_WALL_CORAL_FAN);
+        registerForEachVanilla(BuiltInRegistries.BLOCK, isDeadWallCoralFan.and(isWallCoralFan.negate()), event::register, BlockStateProviders.Blocks.WALL_CORAL_FAN);
     }
 
     private void registerBuiltInUseOnHandlers(RegisterUseOnHandlersEvent event) {
@@ -355,15 +360,15 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
                         .and(isBed.negate())
                         .and(isDoubleHigh.negate())
                         .and(isPiston.negate()),
-                event,
+                event::register,
                 UseOnHandler.BLOCK_ITEM
         );
-        registerForEachVanilla(BuiltInRegistries.ITEM, isStandingWall, event, UseOnHandler.STANDING_WALL);
-        registerForEachVanilla(BuiltInRegistries.ITEM, needsPlacingOnWater, event, UseOnHandler.PLACE_ON_WATER);
-        registerForEachVanilla(BuiltInRegistries.ITEM, isDoubleHigh, event, MultiBlockItemHandler.DOUBLE_HIGH);
-        registerForEachVanilla(BuiltInRegistries.ITEM, isBed, event, MultiBlockItemHandler.BED);
-        registerForEachVanilla(BuiltInRegistries.ITEM, isPiston, event, MultiBlockItemHandler.PISTON);
-        registerForEachVanilla(BuiltInRegistries.ITEM, SpawnEggItem.class::isInstance, event, UseOnHandler.SPAWN_EGG);
+        registerForEachVanilla(BuiltInRegistries.ITEM, isStandingWall, event::register, UseOnHandler.STANDING_WALL);
+        registerForEachVanilla(BuiltInRegistries.ITEM, needsPlacingOnWater, event::register, UseOnHandler.PLACE_ON_WATER);
+        registerForEachVanilla(BuiltInRegistries.ITEM, isDoubleHigh, event::register, MultiBlockItemHandler.DOUBLE_HIGH);
+        registerForEachVanilla(BuiltInRegistries.ITEM, isBed, event::register, MultiBlockItemHandler.BED);
+        registerForEachVanilla(BuiltInRegistries.ITEM, isPiston, event::register, MultiBlockItemHandler.PISTON);
+        registerForEachVanilla(BuiltInRegistries.ITEM, SpawnEggItem.class::isInstance, event::register, UseOnHandler.SPAWN_EGG);
 
         // TODO: handlers for the following items
         // Overriders of `Item.useOn`
@@ -401,7 +406,7 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         // * - questionable, summons projectile entity at players eyes
     }
 
-    private <TKey, TValue> void registerForEachVanilla(Registry<TKey> registry, Predicate<TKey> filter, PsudeoRegistry.Keyed.Registrar<TKey, TValue> registrar, TValue value) {
+    private <TKey, TValue> void registerForEachVanilla(Registry<TKey> registry, Predicate<TKey> filter, BiConsumer<TKey, TValue> registrar, TValue value) {
         for(var key : registry) {
             var registryKey = registry.getKey(key);
 
@@ -410,7 +415,7 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
             }
 
             if(filter.test(key)) {
-                registrar.register(key, value);
+                registrar.accept(key, value);
             }
         }
     }

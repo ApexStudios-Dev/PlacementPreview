@@ -22,7 +22,7 @@ public final class PlacementPreviewMod {
             for(var hand : InteractionHand.values()) {
                 var stack = player.getItemInHand(hand);
                 var item = stack.getItem();
-                var handler = PlacementPreview.API.useOnHandlers().get(item);
+                var handler = PlacementPreview.API.getUseOnHandler(item);
 
                 if(handler != null && handler.accept(level, new UseOnContext(ghosted, player, hand, stack, hitResult))) {
                     return true;

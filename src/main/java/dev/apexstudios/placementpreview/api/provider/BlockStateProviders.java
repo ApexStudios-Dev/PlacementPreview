@@ -423,7 +423,7 @@ public interface BlockStateProviders {
     static BlockStateProvider toBlockStateTransformer(BiFunction<BlockPlaceContext, BlockState, BlockState> mapper) {
         return (context, blockState) -> {
             var remapped = mapper.apply(context, blockState);
-            return PlacementPreview.API.blockStateProviders().get(remapped).apply(context, BlockStateHelper.copyFrom(blockState, remapped));
+            return PlacementPreview.API.getBlockStateProvider(remapped).apply(context, BlockStateHelper.copyFrom(blockState, remapped));
         };
     }
 
