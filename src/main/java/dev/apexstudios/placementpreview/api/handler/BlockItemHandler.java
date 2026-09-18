@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 
 public interface BlockItemHandler extends UseOnHandler {
     @Override
-    default @Nullable PlacementResult<BlockState> accept(GhostLevel level, UseOnContext context) {
+    default @Nullable PlacementResult<BlockState> accept(GhostLevel ghosts, UseOnContext context) {
         var contextResult = updatePlacementContext(new BlockPlaceContext(context));
         var placementContext = contextResult.value();
 
@@ -21,10 +21,10 @@ public interface BlockItemHandler extends UseOnHandler {
             return null;
         }
 
-        return accept(level, placementContext, item, contextResult.isSuccess());
+        return accept(ghosts, placementContext, item, contextResult.isSuccess());
     }
 
-    default @Nullable PlacementResult<BlockState> accept(GhostLevel level, BlockPlaceContext context, BlockItem item, boolean initialSuccess) {
+    default @Nullable PlacementResult<BlockState> accept(GhostLevel ghosts, BlockPlaceContext context, BlockItem item, boolean initialSuccess) {
         var blockStateResult = apply(context, item);
         var blockState = blockStateResult.value();
 
@@ -36,7 +36,7 @@ public interface BlockItemHandler extends UseOnHandler {
             blockStateResult = blockStateResult.asFailure();
         }
 
-        setBlock(level, context, context.getClickedPos(), blockStateResult);
+        setBlock(ghosts, context, context.getClickedPos(), blockStateResult);
         return blockStateResult;
     }
 
@@ -58,11 +58,11 @@ public interface BlockItemHandler extends UseOnHandler {
         return PlacementResult.success(updatedContext);
     }
 
-    default void setBlock(GhostLevel level, BlockPlaceContext context, BlockPos pos, PlacementResult<BlockState> blockStateResult) {
+    default void setBlock(GhostLevel ghosts, BlockPlaceContext context, BlockPos pos, PlacementResult<BlockState> blockStateResult) {
         var blockState = blockStateResult.value();
         var isValid = blockStateResult.isSuccess();
 
-        level.setBlockState(pos, blockState, isValid);
-        level.setBlockEntity(pos, blockState, context.getItemInHand(), isValid);
+        ghosts.setBlockState(pos, blockState, isValid);
+        ghosts.setBlockEntity(pos, blockState, context.getItemInHand(), isValid);
     }
 }

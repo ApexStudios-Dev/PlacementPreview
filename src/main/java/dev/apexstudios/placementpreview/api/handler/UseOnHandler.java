@@ -14,5 +14,5 @@ public interface UseOnHandler {
     UseOnHandler SPAWN_EGG = new SpawnEggHandler() {};
     UseOnHandler CUSHION = new CushionHandler() {};
 
-    @Nullable PlacementResult<?> accept(GhostLevel level, UseOnContext context);
+    @Nullable PlacementResult<?> accept(GhostLevel ghosts, UseOnContext context);
 }

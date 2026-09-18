@@ -15,7 +15,7 @@ import org.jspecify.annotations.Nullable;
 
 public interface SpawnEggHandler extends UseOnHandler {
     @Override
-    default @Nullable PlacementResult<?> accept(GhostLevel level, UseOnContext context) {
+    default @Nullable PlacementResult<?> accept(GhostLevel ghosts, UseOnContext context) {
         var stack = context.getItemInHand();
 
         if(!(stack.getItem() instanceof SpawnEggItem)) {
@@ -28,42 +28,42 @@ public interface SpawnEggHandler extends UseOnHandler {
             return null;
         }
 
-        var result = updateSpawner(level, context, entityType);
+        var result = updateSpawner(ghosts, context, entityType);
 
         if(result == null) {
-            result = spawnEntity(level, context, entityType);
+            result = spawnEntity(ghosts, context, entityType);
         }
 
         return result;
     }
 
-    default @Nullable PlacementResult<?> updateSpawner(GhostLevel level, UseOnContext context, EntityType<?> entityType) {
-        var reality = level.reality();
+    default @Nullable PlacementResult<?> updateSpawner(GhostLevel ghosts, UseOnContext context, EntityType<?> entityType) {
+        var level = context.getLevel();
         var pos = context.getClickedPos();
 
-        if(!(reality.getBlockEntity(pos) instanceof Spawner)) {
+        if(!(level.getBlockEntity(pos) instanceof Spawner)) {
             return null;
         }
 
         // serverLevel.isSpawnerBlockEnabled(); | uses game rules which are server only
-        var blockState = reality.getBlockState(pos);
-        level.setBlockState(pos, blockState, true);
-        level.setBlockEntity(pos, blockState, context.getItemInHand(), true);
-        Objects.requireNonNull((Spawner) level.getBlockEntity(pos)).setEntityId(entityType, reality.getRandom());
+        var blockState = level.getBlockState(pos);
+        ghosts.setBlockState(pos, blockState, true);
+        ghosts.setBlockEntity(pos, blockState, context.getItemInHand(), true);
+        Objects.requireNonNull((Spawner) level.getBlockEntity(pos)).setEntityId(entityType, level.getRandom());
         return PlacementResult.success(entityType);
     }
 
-    default @Nullable <TEntity extends Entity> PlacementResult<?> spawnEntity(GhostLevel level, UseOnContext context, EntityType<TEntity> entityType) {
-        var reality = level.reality();
+    default @Nullable <TEntity extends Entity> PlacementResult<?> spawnEntity(GhostLevel ghosts, UseOnContext context, EntityType<TEntity> entityType) {
+        var level = context.getLevel();
         var clickedFace = context.getClickedFace();
         var pos = context.getClickedPos();
         var spawnPos = pos;
 
-        if(!reality.getBlockState(pos).getCollisionShape(reality, pos).isEmpty()) {
+        if(!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
             spawnPos = pos.relative(clickedFace);
         }
 
-        var entity = level.createEntity(
+        var entity = ghosts.createEntity(
                 entityType,
                 context.getItemInHand(),
                 context.getPlayer(),
@@ -87,7 +87,7 @@ public interface SpawnEggHandler extends UseOnHandler {
             mob.yBodyRotO = mob.yRotO;
         }
 
-        level.addEntity(entity, true);
+        ghosts.addEntity(entity, true);
         return PlacementResult.success(entity);
     }
 }
