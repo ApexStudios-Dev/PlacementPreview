@@ -3,33 +3,61 @@ package dev.apexstudios.placementpreview.core;
 import dev.apexstudios.ghostrenderer.api.GhostRenderer;
 import dev.apexstudios.placementpreview.api.PlacementPreview;
 import dev.apexstudios.placementpreview.core.apiimpl.PlacementPreviewApiImpl;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.UseOnContext;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 
 @Mod(value = PlacementPreview.ID, dist = Dist.CLIENT)
 public final class PlacementPreviewMod {
     public PlacementPreviewMod(IEventBus modBus) {
         ((PlacementPreviewApiImpl) PlacementPreview.API).register(modBus);
 
+        var validPlacement = new AtomicBoolean(true);
+
+        modBus.addListener(RegisterGuiLayersEvent.class, event -> event.registerAboveAll(PlacementPreview.identifier("gui"), (graphics, delta) -> {
+            if(validPlacement.get()) {
+                return;
+            }
+
+            // TODO: Swap out crosshair fully
+            graphics.fakeItem(
+                    Items.BARRIER.getDefaultInstance(),
+                    (graphics.guiWidth() - 16) / 2 + 10,
+                    (graphics.guiHeight() - 16) / 2 + 10
+            );
+        }));
+
         GhostRenderer.registerEvents(PlacementPreview.ID, (level, player, hitResult) -> {
             // TODO: REMOVE ME BEFORE PUBLISHING!!!!!!!!!!!!!!!1
             ((PlacementPreviewApiImpl) PlacementPreviewApiImpl.API).registerAll();
             var ghosted = level.ghosted();
+            validPlacement.set(true);
 
             for(var hand : InteractionHand.values()) {
                 var stack = player.getItemInHand(hand);
-                var item = stack.getItem();
-                var handler = PlacementPreview.API.useOnHandlers().get(item);
+                var handler = PlacementPreview.API.getUseOnHandler(stack);
 
-                if(handler != null && handler.accept(level, new UseOnContext(ghosted, player, hand, stack, hitResult))) {
+                if(handler == null) {
+                    continue;
+                }
+
+                var result = handler.accept(level, new UseOnContext(ghosted, player, hand, stack, hitResult));
+
+                if(result != null) {
+                    if(result.isFailure()) {
+                        validPlacement.set(false);
+                    }
+
                     return true;
                 }
             }
 
             return false;
-        });
+        }, PlacementPreview.GHOST_PROPERTIES);
     }
 }

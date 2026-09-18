@@ -9,36 +9,35 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 public interface BlockItemHandler extends UseOnHandler {
     @Override
-    default boolean accept(GhostLevel level, UseOnContext context) {
+    default @Nullable PlacementResult<BlockState> accept(GhostLevel level, UseOnContext context) {
         var contextResult = updatePlacementContext(new BlockPlaceContext(context));
         var placementContext = contextResult.value();
 
         if(!(placementContext.getItemInHand().getItem() instanceof BlockItem item)) {
-            return false;
+            return null;
         }
 
         return accept(level, placementContext, item, contextResult.isSuccess());
     }
 
-    default boolean accept(GhostLevel level, BlockPlaceContext context, BlockItem item, boolean initialSuccess) {
+    default @Nullable PlacementResult<BlockState> accept(GhostLevel level, BlockPlaceContext context, BlockItem item, boolean initialSuccess) {
         var blockStateResult = apply(context, item);
         var blockState = blockStateResult.value();
 
         if(blockState.isEmpty()) {
-            return false;
+            return null;
         }
 
-        var isPlaceable = initialSuccess;
-
-        if(isPlaceable) {
-            isPlaceable = PlacementValidators.PLACEABLE.test(context, blockState);
+        if(!initialSuccess || !PlacementValidators.PLACEABLE.test(context, blockState)) {
+            blockStateResult = blockStateResult.asFailure();
         }
 
-        setBlock(level, context, context.getClickedPos(), blockState, isPlaceable);
-        return true;
+        setBlock(level, context, context.getClickedPos(), blockStateResult);
+        return blockStateResult;
     }
 
     default PlacementResult<BlockState> apply(BlockPlaceContext context, BlockItem item) {
@@ -59,7 +58,10 @@ public interface BlockItemHandler extends UseOnHandler {
         return PlacementResult.success(updatedContext);
     }
 
-    default void setBlock(GhostLevel level, BlockPlaceContext context, BlockPos pos, BlockState blockState, boolean isValid) {
+    default void setBlock(GhostLevel level, BlockPlaceContext context, BlockPos pos, PlacementResult<BlockState> blockStateResult) {
+        var blockState = blockStateResult.value();
+        var isValid = blockStateResult.isSuccess();
+
         level.setBlockState(pos, blockState, isValid);
         level.setBlockEntity(pos, blockState, context.getItemInHand(), isValid);
     }

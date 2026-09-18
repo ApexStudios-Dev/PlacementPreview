@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(RedstoneTorchBlock.class)
-public interface RedStoneTorchBlockAccessor {
+public interface RedstoneTorchBlockAccessor {
     @Invoker("hasNeighborSignal")
     boolean PlacementPreview$hasNeighborSignal(Level level, BlockPos pos, BlockState blockState);
 }

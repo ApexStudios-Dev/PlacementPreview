@@ -15,20 +15,20 @@ description = "PlacementPreview is a mod for Minecraft (NeoForge) which attempts
 [[dependencies.placementpreview]]
 modId = "minecraft"
 type = "required"
-versionRange = "[26.2,26.3)"
+versionRange = "[26.3,26.4)"
 ordering = "NONE"
 side = "BOTH"
 [[dependencies.placementpreview]]
 modId = "neoforge"
 type = "required"
-versionRange = "[26.2-alpha,26.3)"
+versionRange = "[26.3-alpha,26.4)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.placementpreview]]
 modId = "ghostrenderer"
 type = "required"
-versionRange = "[26.2,26.3)"
+versionRange = "[26.3,26.4)"
 #[dependencies.placementpreview.mc-publish]
 #modrinth = "??"
 #curseforge = "??"

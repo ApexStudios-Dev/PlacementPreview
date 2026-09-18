@@ -37,7 +37,7 @@ public interface BlockStateProvider {
 
     static PlacementResult<BlockState> applyDefaults(BlockPlaceContext context, Block block) {
         var blockState = BlockStateHelper.getDefaultBlockState(context.getItemInHand(), block);
-        return PlacementPreview.API.blockStateProviders().get(blockState).apply(context, blockState);
+        return PlacementPreview.API.getBlockStateProvider(blockState).apply(context, blockState);
     }
 
     static BlockStateProvider fromVanilla(Vanilla vanilla) {
