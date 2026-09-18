@@ -12,6 +12,7 @@ public interface UseOnHandler {
     UseOnHandler STANDING_WALL = new StandingAndWallBlockItemHandler() {};
     UseOnHandler PLACE_ON_WATER = new PlaceOnWaterHandler() {};
     UseOnHandler SPAWN_EGG = new SpawnEggHandler() {};
+    UseOnHandler CUSHION = new CushionHandler() {};
 
     @Nullable PlacementResult<?> accept(GhostLevel level, UseOnContext context);
 }
