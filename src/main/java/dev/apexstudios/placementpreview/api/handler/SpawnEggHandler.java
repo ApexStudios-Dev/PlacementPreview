@@ -1,5 +1,6 @@
 package dev.apexstudios.placementpreview.api.handler;
 
+import dev.apexstudios.ghostrenderer.api.GhostHelper;
 import dev.apexstudios.ghostrenderer.api.GhostLevel;
 import dev.apexstudios.placementpreview.api.PlacementResult;
 import java.util.Objects;
@@ -7,7 +8,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Spawner;
@@ -28,7 +28,7 @@ public interface SpawnEggHandler extends UseOnHandler {
             return null;
         }
 
-        var result = updateSpawner(ghosts, context, entityType);
+        PlacementResult<?> result = updateSpawner(ghosts, context, entityType);
 
         if(result == null) {
             result = spawnEntity(ghosts, context, entityType);
@@ -37,7 +37,7 @@ public interface SpawnEggHandler extends UseOnHandler {
         return result;
     }
 
-    default @Nullable PlacementResult<?> updateSpawner(GhostLevel ghosts, UseOnContext context, EntityType<?> entityType) {
+    default @Nullable PlacementResult<EntityType<?>> updateSpawner(GhostLevel ghosts, UseOnContext context, EntityType<?> entityType) {
         var level = context.getLevel();
         var pos = context.getClickedPos();
 
@@ -53,7 +53,7 @@ public interface SpawnEggHandler extends UseOnHandler {
         return PlacementResult.success(entityType);
     }
 
-    default @Nullable <TEntity extends Entity> PlacementResult<?> spawnEntity(GhostLevel ghosts, UseOnContext context, EntityType<TEntity> entityType) {
+    default @Nullable <TEntity extends Entity> PlacementResult<TEntity> spawnEntity(GhostLevel ghosts, UseOnContext context, EntityType<TEntity> entityType) {
         var level = context.getLevel();
         var clickedFace = context.getClickedFace();
         var pos = context.getClickedPos();
@@ -63,8 +63,9 @@ public interface SpawnEggHandler extends UseOnHandler {
             spawnPos = pos.relative(clickedFace);
         }
 
-        var entity = ghosts.createEntity(
+        var entity = GhostHelper.createEntity(
                 entityType,
+                level,
                 context.getItemInHand(),
                 context.getPlayer(),
                 context.getClickedPos(),
@@ -77,16 +78,7 @@ public interface SpawnEggHandler extends UseOnHandler {
             return null;
         }
 
-        entity.setYRot(Direction.fromYRot(context.getRotation()).getOpposite().toYRot());
-        entity.setYBodyRot(entity.getYRot());
-        entity.setOldRot();
-
-        if(entity instanceof Mob mob) {
-            mob.yHeadRot = mob.getYRot();
-            mob.yHeadRotO = mob.yRotO;
-            mob.yBodyRotO = mob.yRotO;
-        }
-
+        GhostHelper.snapRotation(entity, Direction.fromYRot(context.getRotation()).getOpposite().toYRot(), 0F);
         ghosts.addEntity(entity, true);
         return PlacementResult.success(entity);
     }

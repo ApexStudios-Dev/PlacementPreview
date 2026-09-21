@@ -21,6 +21,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CushionItem;
 import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemFrameItem;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.StandingAndWallBlockItem;
@@ -354,6 +355,10 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         Predicate<Item> isBed = isBlockItemWithBlock(AbstractBedBlock.class::isInstance);
         Predicate<Item> isBlockItem = BlockItem.class::isInstance;
 
+        event.register(Items.ARMOR_STAND, new ArmorStandHandler());
+        event.register(Items.END_CRYSTAL, new EndCrystalHandler());
+        event.register(Items.PAINTING, new PaintingHandler());
+
         registerForEachVanilla(
                 BuiltInRegistries.ITEM,
                 isBlockItem.and(needsPlacingOnWater.negate())
@@ -371,19 +376,17 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         registerForEachVanilla(BuiltInRegistries.ITEM, isPiston, event::register, MultiBlockItemHandler.PISTON);
         registerForEachVanilla(BuiltInRegistries.ITEM, SpawnEggItem.class::isInstance, event::register, UseOnHandler.SPAWN_EGG);
         registerForEachVanilla(BuiltInRegistries.ITEM, CushionItem.class::isInstance, event::register, UseOnHandler.CUSHION);
+        registerForEachVanilla(BuiltInRegistries.ITEM, ItemFrameItem.class::isInstance, event::register, new ItemFrameHandler());
 
         // TODO: handlers for the following items
         // Overriders of `Item.useOn`
-        //  ArmorStandItem
         //  AxeItem
         //  BoneMealItem
         //  DebugStickItem
-        //  EndCrystalItem
         //  EnderEyeItem*
         //  FireChargeItem
         //  FireworkRocketItem*
         //  FlintAndSteelItem
-        //  HangingEntityItem
         //  HoeItem
         //  HoneycombItem
         //  LeadITem

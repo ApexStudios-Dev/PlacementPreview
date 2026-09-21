@@ -24,12 +24,13 @@ public final class PlacementPreviewMod {
                 return;
             }
 
+            var x = (graphics.guiWidth() - 16) / 2 + 10;
+            var y = (graphics.guiHeight() - 16) / 2 + 10;
+
             // TODO: Swap out crosshair fully
-            graphics.fakeItem(
-                    Items.BARRIER.getDefaultInstance(),
-                    (graphics.guiWidth() - 16) / 2 + 10,
-                    (graphics.guiHeight() - 16) / 2 + 10
-            );
+            graphics.fakeItem(Items.BARRIER.getDefaultInstance(), x, y);
+            // graphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.withDefaultNamespace("player_list/remove_player"), x, y, 16, 16);
+            // graphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.withDefaultNamespace("world_list/error_highlighted"), x, y, 16, 16);
         }));
 
         GhostRenderer.registerEvents(PlacementPreview.ID, (level, player, hitResult) -> {

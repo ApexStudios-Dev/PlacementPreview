@@ -1,5 +1,6 @@
 package dev.apexstudios.placementpreview.api.handler;
 
+import dev.apexstudios.ghostrenderer.api.GhostHelper;
 import dev.apexstudios.ghostrenderer.api.GhostLevel;
 import dev.apexstudios.placementpreview.api.PlacementResult;
 import net.minecraft.core.Direction;
@@ -16,7 +17,7 @@ import org.jspecify.annotations.Nullable;
 
 public interface CushionHandler extends UseOnHandler {
     @Override
-    default @Nullable PlacementResult<?> accept(GhostLevel ghosts, UseOnContext context) {
+    default @Nullable PlacementResult<Cushion> accept(GhostLevel ghosts, UseOnContext context) {
         var stack = context.getItemInHand();
 
         if(!(stack.getItem() instanceof CushionItem)) {
@@ -28,8 +29,9 @@ public interface CushionHandler extends UseOnHandler {
         var placeContext = new BlockPlaceContext(recalculated);
         var pos = placeContext.getClickedPos();
 
-        var entity = ghosts.createEntity(
+        var entity = GhostHelper.createEntity(
                 EntityTypes.CUSHION,
+                level,
                 EntityType.createDefaultStackConfig(level, stack, context.getPlayer()),
                 pos,
                 EntitySpawnReason.SPAWN_ITEM_USE,
@@ -43,7 +45,7 @@ public interface CushionHandler extends UseOnHandler {
 
         var valid = true;
         var entityPos = Vec3.atCenterOfWithY(pos, recalculated.getClickLocation().y());
-        entity.snapTo(entityPos, Direction.fromYRot(placeContext.getRotation()).toYRot(), 0F);
+        GhostHelper.snapRotation(entity, Direction.fromYRot(placeContext.getRotation()).toYRot(), 0F);
 
         if(recalculated.getClickedFace() != Direction.UP) {
             valid = false;
