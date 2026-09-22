@@ -1,6 +1,5 @@
 package dev.apexstudios.placementpreview.mixin;
 
-import dev.apexstudios.placementpreview.api.PlacementPreview;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
