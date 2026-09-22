@@ -48,7 +48,7 @@ public interface SpawnEggHandler extends UseOnHandler {
         // serverLevel.isSpawnerBlockEnabled(); | uses game rules which are server only
         var blockState = level.getBlockState(pos);
         ghosts.setBlockState(pos, blockState, true);
-        ghosts.setBlockEntity(pos, blockState, context.getItemInHand(), true);
+        ghosts.setBlockEntity(pos, blockState, true);
         Objects.requireNonNull((Spawner) level.getBlockEntity(pos)).setEntityId(entityType, level.getRandom());
         return PlacementResult.success(entityType);
     }

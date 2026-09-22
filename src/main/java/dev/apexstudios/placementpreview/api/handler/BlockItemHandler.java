@@ -63,6 +63,6 @@ public interface BlockItemHandler extends UseOnHandler {
         var isValid = blockStateResult.isSuccess();
 
         ghosts.setBlockState(pos, blockState, isValid);
-        ghosts.setBlockEntity(pos, blockState, context.getItemInHand(), isValid);
+        ghosts.setBlockEntity(pos, blockState, isValid);
     }
 }

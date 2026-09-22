@@ -65,6 +65,7 @@ public final class PlacementPreviewMod {
                         validPlacement.set(false);
                     }
 
+                    level.finalizePlacements(stack, player);
                     return true;
                 }
             }
