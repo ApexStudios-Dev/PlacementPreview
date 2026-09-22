@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import dev.apexstudios.ghostrenderer.api.GhostHelper;
 import dev.apexstudios.ghostrenderer.api.GhostLevel;
 import dev.apexstudios.placementpreview.api.PlacementResult;
+import dev.apexstudios.placementpreview.mixin.BoatItemAccessor;
 import dev.apexstudios.placementpreview.mixin.HangingEntityAccessor;
 import dev.apexstudios.placementpreview.mixin.PaintingAccessor;
 import java.util.Objects;
@@ -14,6 +15,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.PaintingVariantTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
@@ -24,17 +26,21 @@ import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.decoration.painting.Painting;
 import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
+import net.minecraft.world.item.BoatItem;
 import net.minecraft.world.item.CushionItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.MinecartItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseRailBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -120,7 +126,6 @@ public interface UseOnHandler {
         if(minecart == null) {
             return null;
         }
-
 
         if(AbstractMinecart.useExperimentalMovement(level)) {
             var box = minecart.getBoundingBox();
@@ -289,6 +294,48 @@ public interface UseOnHandler {
 
             return face == context.getClickedFace();
         }
+    };
+    UseOnHandler BOAT = (ghosts, context) -> {
+        var stack = context.getItemInHand();
+
+        if(!(stack.getItem() instanceof BoatItem item)) {
+            return null;
+        }
+
+        var level = context.getLevel();
+        var player = context.getPlayer();
+        var hitResult = Item.getPlayerPOVHitResult(level, player, ClipContext.Fluid.ANY);
+        var viewVector = player.getViewVector(1F);
+        var boat = ((BoatItemAccessor) item).PlacementPreview$getBoat(level, hitResult, stack, player);
+
+        if(boat == null) {
+            return null;
+        }
+
+        var valid = hitResult.getType() == HitResult.Type.BLOCK;
+
+        if(valid) {
+            var entities = level.getEntities(player, player.getBoundingBox().expandTowards(viewVector.scale(5D)).inflate(1D), EntitySelector.CAN_BE_PICKED);
+
+            if(!entities.isEmpty()) {
+                var from = player.getEyePosition();
+
+                for(var entity : entities) {
+                    if(entity.getBoundingBox().inflate(entity.getPickRadius()).contains(from)) {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(valid && !level.noCollision(boat, boat.getBoundingBox())) {
+            valid = false;
+        }
+
+        GhostHelper.snapRotation(boat, player.getYRot(), 0F);
+        ghosts.addEntity(boat, valid);
+        return PlacementResult.of(boat, valid);
     };
 
     @Nullable PlacementResult<?> accept(GhostLevel ghosts, UseOnContext context);

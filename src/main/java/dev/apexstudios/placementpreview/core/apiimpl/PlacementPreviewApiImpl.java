@@ -18,6 +18,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.BoatItem;
 import net.minecraft.world.item.CushionItem;
 import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.Item;
@@ -379,6 +380,7 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         registerForEachVanilla(BuiltInRegistries.ITEM, CushionItem.class::isInstance, event::register, UseOnHandler.CUSHION);
         registerForEachVanilla(BuiltInRegistries.ITEM, ItemFrameItem.class::isInstance, event::register, UseOnHandler.ITEM_FRAME);
         registerForEachVanilla(BuiltInRegistries.ITEM, MinecartItem.class::isInstance, event::register, UseOnHandler.MINECART);
+        registerForEachVanilla(BuiltInRegistries.ITEM, BoatItem.class::isInstance, event::register, UseOnHandler.BOAT);
 
         // TODO: handlers for the following items
         // Overriders of `Item.useOn`

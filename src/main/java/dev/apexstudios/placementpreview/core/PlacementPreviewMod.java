@@ -4,13 +4,16 @@ import dev.apexstudios.ghostrenderer.api.GhostRenderer;
 import dev.apexstudios.placementpreview.api.PlacementPreview;
 import dev.apexstudios.placementpreview.core.apiimpl.PlacementPreviewApiImpl;
 import java.util.concurrent.atomic.AtomicBoolean;
+import net.minecraft.client.renderer.entity.AbstractBoatRenderer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.UseOnContext;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEvent;
 
 @Mod(value = PlacementPreview.ID, dist = Dist.CLIENT)
 public final class PlacementPreviewMod {
@@ -32,6 +35,14 @@ public final class PlacementPreviewMod {
             // graphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.withDefaultNamespace("player_list/remove_player"), x, y, 16, 16);
             // graphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.withDefaultNamespace("world_list/error_highlighted"), x, y, 16, 16);
         }));
+
+        modBus.addListener(EventPriority.HIGH, RegisterRenderStateModifiersEvent.class, event -> {
+            event.registerEntityModifier(AbstractBoatRenderer.class, (boat, renderState) -> {
+                if(GhostRenderer.isGhostRender(renderState)) {
+                    renderState.isUnderWater = true;
+                }
+            });
+        });
 
         GhostRenderer.registerEvents(PlacementPreview.ID, (level, player, hitResult) -> {
             // TODO: REMOVE ME BEFORE PUBLISHING!!!!!!!!!!!!!!!1
