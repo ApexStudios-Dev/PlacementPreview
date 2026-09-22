@@ -23,6 +23,7 @@ import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemFrameItem;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.MinecartItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.level.block.AbstractBedBlock;
@@ -377,6 +378,7 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         registerForEachVanilla(BuiltInRegistries.ITEM, SpawnEggItem.class::isInstance, event::register, UseOnHandler.SPAWN_EGG);
         registerForEachVanilla(BuiltInRegistries.ITEM, CushionItem.class::isInstance, event::register, UseOnHandler.CUSHION);
         registerForEachVanilla(BuiltInRegistries.ITEM, ItemFrameItem.class::isInstance, event::register, new ItemFrameHandler());
+        registerForEachVanilla(BuiltInRegistries.ITEM, MinecartItem.class::isInstance, event::register, UseOnHandler.MINECART);
 
         // TODO: handlers for the following items
         // Overriders of `Item.useOn`
