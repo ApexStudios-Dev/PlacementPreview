@@ -15,9 +15,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public abstract class HangingEntityHandler<TEntity extends HangingEntity> implements UseOnHandler {
+public abstract class HangingEntityHandler implements UseOnHandler {
     @Override
-    public @Nullable PlacementResult<TEntity> accept(GhostLevel ghosts, UseOnContext context) {
+    public @Nullable PlacementResult<?> accept(GhostLevel ghosts, UseOnContext context) {
         var stack = context.getItemInHand();
 
         if(!(stack.getItem() instanceof HangingEntityItem)) {
@@ -67,5 +67,5 @@ public abstract class HangingEntityHandler<TEntity extends HangingEntity> implem
         return player != null && ((HangingEntityItemAccessor) stack.getItem()).PlacementPreview$mayPlace(player, face, stack, pos);
     }
 
-    protected abstract @Nullable PlacementResult<TEntity> createEntity(Level level, BlockPos pos, Direction face, ItemStack stack);
+    protected abstract @Nullable PlacementResult<? extends HangingEntity> createEntity(Level level, BlockPos pos, Direction face, ItemStack stack);
 }

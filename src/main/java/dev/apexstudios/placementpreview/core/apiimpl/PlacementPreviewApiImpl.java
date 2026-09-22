@@ -356,9 +356,9 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         Predicate<Item> isBed = isBlockItemWithBlock(AbstractBedBlock.class::isInstance);
         Predicate<Item> isBlockItem = BlockItem.class::isInstance;
 
-        event.register(Items.ARMOR_STAND, new ArmorStandHandler());
-        event.register(Items.END_CRYSTAL, new EndCrystalHandler());
-        event.register(Items.PAINTING, new PaintingHandler());
+        event.register(Items.ARMOR_STAND, UseOnHandler.ARMOR_STAND);
+        event.register(Items.END_CRYSTAL, UseOnHandler.END_CRYSTAL);
+        event.register(Items.PAINTING, UseOnHandler.PAINTING);
 
         registerForEachVanilla(
                 BuiltInRegistries.ITEM,
@@ -377,7 +377,7 @@ public final class PlacementPreviewApiImpl implements PlacementPreview {
         registerForEachVanilla(BuiltInRegistries.ITEM, isPiston, event::register, MultiBlockItemHandler.PISTON);
         registerForEachVanilla(BuiltInRegistries.ITEM, SpawnEggItem.class::isInstance, event::register, UseOnHandler.SPAWN_EGG);
         registerForEachVanilla(BuiltInRegistries.ITEM, CushionItem.class::isInstance, event::register, UseOnHandler.CUSHION);
-        registerForEachVanilla(BuiltInRegistries.ITEM, ItemFrameItem.class::isInstance, event::register, new ItemFrameHandler());
+        registerForEachVanilla(BuiltInRegistries.ITEM, ItemFrameItem.class::isInstance, event::register, UseOnHandler.ITEM_FRAME);
         registerForEachVanilla(BuiltInRegistries.ITEM, MinecartItem.class::isInstance, event::register, UseOnHandler.MINECART);
 
         // TODO: handlers for the following items
